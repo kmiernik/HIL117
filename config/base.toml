@@ -1,0 +1,319 @@
+title = "Zero config for experiment HIL117"
+
+[boards]
+    PHA = [0, 1]
+    PSD = [2, 3, 4, 5]
+
+[spectra]
+    dE = 1.0
+    Emax = 4096.0
+    dt = 1.0
+    tmax = 100.0
+    Mmax = 10
+    coin = [40.0, 0.0, 0.0]
+    bgo_low = 30.0
+    ge_low = 10.0
+    neda_low = 10.0
+    dia_low = 10.0
+
+[label]
+	[label.0]
+		type = "Ge"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.1]
+		type = "BGO"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.2]
+		type = "Ge"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.3]
+		type = "BGO"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.4]
+		type = "Ge"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.5]
+		type = "BGO"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.6]
+		type = "Ge"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.7]
+		type = "BGO"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.8]
+		type = "Ge"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.9]
+		type = "BGO"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.10]
+		type = "Ge"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.11]
+		type = "BGO"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.12]
+		type = "Ge"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.13]
+		type = "BGO"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.16]
+		type = "Ge"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.17]
+		type = "BGO"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.18]
+		type = "Ge"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.19]
+		type = "BGO"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.20]
+		type = "Ge"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.21]
+		type = "BGO"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.22]
+		type = "Ge"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.23]
+		type = "BGO"
+		ring = "143"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.24]
+		type = "Ge"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.25]
+		type = "BGO"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.26]
+		type = "Ge"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.27]
+		type = "BGO"
+		ring = "117"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.28]
+		type = "Ge"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.29]
+		type = "BGO"
+		ring = "101"
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.30]
+		type = "Ge"
+		ring = ""
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+
+	[label.31]
+		type = "BGO"
+		ring = ""
+		phi = "0"
+		dt = 0.0
+		cal = [0.0, 1.0, 0.0]
+		walk = [0.0, 1.0, 0.0]
+		valid = true
+		comment = " "
+

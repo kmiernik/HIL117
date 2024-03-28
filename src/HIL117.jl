@@ -1,5 +1,9 @@
 module HIL117
 
-# Write your package code here.
+using TOML
+
+include("caendat.jl")
+export Hit, read_aggregate
+
 
 end
