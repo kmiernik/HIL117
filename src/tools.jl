@@ -81,3 +81,38 @@ title = "Zero config for experiment HIL117
     end
     close(fout)
 end
+
+
+"""
+    read_raw_data(filename; n_agg=-1)
+
+    Read raw data from `filename`. Returns vector of `Hits`.
+    If n_agg = -1 (default) whole file is read, otherwise n_agg
+    aggregates are read.
+"""
+function read_raw_data(filename; n_agg=-1)
+    fin = open(filename, "r")
+    config = TOML.parsefile("config/base.toml")
+    header = zeros(UInt32, 12)
+    read!(fin, header)
+
+    hits = Hit[]
+    n_read = 0
+    while true
+        try
+            append!(hits, read_aggregate(fin, config))
+            n_read += 1
+            if n_agg >0 && n_read >= n_agg
+                break
+            end
+        catch err
+            if isa(err, EOFError)
+                break
+            else
+                rethrow()
+            end
+        end
+    end
+    return hits
+end
+

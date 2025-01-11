@@ -24,6 +24,35 @@ struct Hit
 end
 
 
+function Base.write(io::IO, hit::Hit)
+    write(io, hit.board)
+    write(io, hit.ch)
+    write(io, hit.E)
+    write(io, hit.ts)
+    write(io, hit.tf)
+    write(io, hit.qshort)
+end
+
+function Base.read(io::IO, ::Type{Hit})
+    board = read(io, UInt8)
+    ch = read(io, UInt8)
+    E = read(io, UInt16)
+    ts = read(io, UInt64)
+    tf = read(io, Int16)
+    qshort = read(io, UInt16)
+    return Hit(board, ch, E, ts, tf, qshort)
+end
+
+function Base.show(io::IO, hit::Hit)
+    print(io, Int64(hit.board), " ",
+              Int64(hit.ch), " ",
+              Int64(hit.E), " ",
+              Float64(hit.ts), " ",
+              Int64(hit.tf), " ",
+              Int64(hit.qshort))
+end
+
+
 """
     read_aggregate(fin)
 
