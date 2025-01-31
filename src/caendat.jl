@@ -14,7 +14,7 @@ end
 ChFormatInfo() = ChFormatInfo(0, UInt8(0), UInt8(0), UInt8(0), UInt8(0),
                               false, false, false, false, false)
 
-struct Hit
+struct RawHit
     board::UInt8
     ch::UInt8
     E::UInt16
@@ -24,7 +24,13 @@ struct Hit
 end
 
 
-function Base.write(io::IO, hit::Hit)
+function RawHit()
+    return RawHit(zero(UInt8), zero(UInt8), zero(UInt16), 
+                  zero(UInt64), zero(Int16), zero(UInt16))
+end
+
+
+function Base.write(io::IO, hit::RawHit)
     write(io, hit.board)
     write(io, hit.ch)
     write(io, hit.E)
@@ -33,21 +39,23 @@ function Base.write(io::IO, hit::Hit)
     write(io, hit.qshort)
 end
 
-function Base.read(io::IO, ::Type{Hit})
+
+function Base.read(io::IO, ::Type{RawHit})
     board = read(io, UInt8)
     ch = read(io, UInt8)
     E = read(io, UInt16)
     ts = read(io, UInt64)
     tf = read(io, Int16)
     qshort = read(io, UInt16)
-    return Hit(board, ch, E, ts, tf, qshort)
+    return RawHit(board, ch, E, ts, tf, qshort)
 end
 
-function Base.show(io::IO, hit::Hit)
+
+function Base.show(io::IO, hit::RawHit)
     print(io, Int64(hit.board), " ",
               Int64(hit.ch), " ",
               Int64(hit.E), " ",
-              Float64(hit.ts), " ",
+              Int64(hit.ts), " ",
               Int64(hit.tf), " ",
               Int64(hit.qshort))
 end
@@ -61,13 +69,20 @@ end
 
 """
 function read_aggregate(fin, config)
+    pha_boards = config["boards"]["PHA"]
+    psd_boards = config["boards"]["PSD"]
+
     board_header = zeros(UInt32, 4)
     read!(fin, board_header)
 
     signature = ((board_header[1] & 0xA0000000) >> 28) % UInt8
     if signature !== UInt8(10)
-        println("Wrong board aggregate signature")
-        return Hit[]
+        current_pos = position(fin)
+        #@warn "Wrong board aggregate signature $signature at $current_pos"
+        # Move back file pointer, skip just one byte (header is 16 long)
+        # perhaps good board header will be found in the next call
+        skip(fin, -15)
+        return RawHit[]
     end
     bsize = (board_header[1] & (0x0FFFFFFF)) % UInt32
 
@@ -79,7 +94,7 @@ function read_aggregate(fin, config)
     bacounter = (board_header[3] & (0x007FFFFF))
     btimetag = board_header[4]
 
-    hits = Hit[]
+    hits = RawHit[]
     channels = UInt8[]
     for i in 0:7
         if (dualchmask >> i) & 1 != 0
@@ -128,7 +143,7 @@ function read_aggregate(fin, config)
             pos += swords + 1
 
             reject = false
-            if Int64(boardid) in config["boards"]["PHA"]
+            if Int64(boardid) in pha_boards
                 extras2 = chdata[pos]
                 energy = (chdata[pos+1] & (0x00007FFF)) % UInt16
                 pu = (chdata[pos+1] >> 15) & 1 != 0 
@@ -168,7 +183,7 @@ function read_aggregate(fin, config)
                     #evafter = (extras2 & 0xffff0000)
                 end
                 qshort = UInt16(0)
-            elseif Int64(boardid) in config["boards"]["PSD"]
+            elseif Int64(boardid) in psd_boards
                 extras = chdata[pos]
                 qshort = (chdata[pos+1] & (0x00007FFF)) % UInt16
                 pur = (chdata[pos+1] >> 15) & 1 != 0 
@@ -200,7 +215,8 @@ function read_aggregate(fin, config)
 
                 energy = qlong
             else
-                println("Unknown board ", boardid)
+                current_pos = position(fin)
+                #@warn "Unknown board $boardid at $current_pos"
                 return hits
             end
             pos += 2
@@ -208,7 +224,8 @@ function read_aggregate(fin, config)
             chnumber = 2 * channel + ifelse(ch, Int8(1), Int8(0))
             if !reject
                 push!(hits, 
-                  Hit(boardid, Int8(chnumber), energy, tstamp, tfine, qshort))
+                  RawHit(boardid, Int8(chnumber), 
+                         energy, tstamp, tfine, qshort))
             end
         end
     end
