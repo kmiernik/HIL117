@@ -2,9 +2,7 @@ module HIL117
 
 using TOML
 using MTools
-using GLMakie
 using LsqFit
-using Infiltrator
 using Printf
 using Dates
 using StatsBase
@@ -23,6 +21,6 @@ include("edf.jl")
 include("scan.jl")
 export scan_run
 
-include("dev.jl")
+#include("dev.jl")
 
 end

@@ -169,24 +169,6 @@ function init_cal(filename)
 end
 
 
-function quadquad(x::Real, p)
-    if x < p[6]
-        return p[1] + p[2] * x + p[7] * x^2
-    else
-        return p[3] + p[4] * x + p[5] * x^2
-    end
-end
-
-
-function quadquad(x, p)
-    y = zeros(size(x))
-    for (i, xi) in enumerate(x)
-        y[i] = quadquad(xi, p)
-    end
-    y
-end
-
-
 function linquad(x::Vector, p)
     y = zeros(size(x))
     for (i, xi) in enumerate(x)
@@ -226,7 +208,7 @@ end
 
     Data are loaded from output of scan_raw_ge (16x16384 array)
 """
-function cal_energy(filename, configfile; doplot=false)
+function cal_energy(filename, configfile)
 
     config = TOML.parsefile(configfile)
     spectra = zeros(Int64, 16, 32768)
@@ -314,24 +296,6 @@ function cal_energy(filename, configfile; doplot=false)
                 push!(cherr, pf.param[6])
             end
 
-            if doplot
-                ix = round(Int, (ip-1)/5, RoundDown)+1
-                iy = (ip-1)%5+1
-                ax = Axis(fig[ix, iy]; title="$(eu[ip, 1])")
-                stairs!(ax, x0-dch-20:x0+dch+20, 
-                        vec(spectra[ige, x0-dch-20:x0+dch+20]))
-                if x1 > 0
-                    lines!(ax, x0-dch:0.1:x0+dch, ngausslin(x0-dch:0.1:x0+dch, 
-                                                    pf.param), color="orange")
-                    lines!(ax, x0-dch:0.1:x0+dch, 
-                           ngausslin(x0-dch:0.1:x0+dch, guess), color="pink")
-                else
-                    lines!(ax, x0-dch:0.1:x0+dch, gausslin(x0-dch:0.1:x0+dch, 
-                                                    pf.param), color="red")
-                    lines!(ax, x0-dch:0.1:x0+dch, gausslin(x0-dch:0.1:x0+dch, 
-                                     guess), color="pink")
-                end
-            end
             if x1 > 0
                 ip += 1
             end
@@ -384,40 +348,6 @@ function cal_energy(filename, configfile; doplot=false)
         #        sum(qqf.resid .^ 2 ./ cherr) / (n_peaks - 6), 
         #        maximum(abs.(qqf.resid)))
         
-        if doplot
-            axl = Axis(fig[5, 1]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                       yticks=-0.5:0.25:0.5,
-                       limits=(0, 3000, -0.5, 0.5), title="Lin")
-            axq = Axis(fig[5, 2]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                       yticks=-0.5:0.25:0.5,
-                      limits=(0, 3000, -0.5, 0.5), title="Quad")
-            axll = Axis(fig[5, 3]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                       yticks=-0.5:0.25:0.5,
-                      limits=(0, 3000, -0.5, 0.5), title="LinLin")
-            axlq = Axis(fig[5, 4]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                       yticks=-0.5:0.25:0.5,
-                      limits=(0, 3000, -0.5, 0.5), title="LinQuad")
-            axqq = Axis(fig[5, 5]; ylabel="σ (%)", xlabel="E (keV)", 
-                      limits=(0, 3000, nothing, nothing))
-            stem!(axl, eu[:, 1], lf.resid, color="black", marker=:circle)
-            stem!(axq, eu[:, 1], qf.resid, color="blue", marker=:utriangle)
-            stem!(axll, eu[:, 1], llf.resid, color="red", marker=:diamond)
-            stem!(axlq, eu[:, 1], lqf.resid, color="green", marker=:star5)
-            scatter!(axqq, eu[:, 1], 100.0 .* abs.(cherr) ./ eu[:, 1], 
-                     color="violet", marker=:star6,
-                     label="σ")
-            save(@sprintf("cal_%02d.png", label), fig)
-            #=
-            fig2 = Figure(size=(800, 600))
-            ax = Axis(fig2[1, 1], xticks=0:5000:20000,
-                      xminorticks=IntervalsBetween(10), xminorticksvisible=true,
-                      xminorgridvisible=true)
-            scatter!(ax, chfit, lf.resid, color="black", marker=:circle,
-                     label="Lin")
-            vlines!(ax, [sewpoint[label]], color="red", linestyle=:dash)
-            save(@sprintf("lin_%02d.png", label), fig2)
-            =#
-        end
     end
     new_config
 end
@@ -1146,198 +1076,4 @@ function dia_banana_fit(dia_dir_name, config::Dict;
     end
     new_config
 
-end
-
-
-function fit_ban(dia_spec, c_lim, E_lim, loc)        
-    Ai = Float64[]
-    Pi = Float64[]
-    Ei = Float64[]
-    fig = Figure(size=(800, 800))
-    fi = 1
-    t = 0.00:0.01:1.27
-    b(x, p) = @. p[1] / x^2 + p[2]
-    for ie in 1:size(dia_spec)[1]
-        if maximum(dia_spec[ie, :]) > c_lim && (100 * (ie - 1) < E_lim)
-            ix = round(Int, (fi-1)/6, RoundDown)+1
-            iy = (fi-1)%6+1
-            fi += 1
-            ax = Axis(fig[ix, iy]; title="$(100*ie+50)",
-                                   yticklabelsvisible=false)
-            tg = t[argmax(dia_spec[ie, :])]
-            gf = curve_fit(ngauss, t, dia_spec[ie, :], 
-                            [1000, tg, 0.03, 200, tg+0.2, 0.03])
-            scatter!(ax, t, dia_spec[ie, :], marker=:cross, markersize=5)
-            lines!(ax, t, ngauss(t, gf.param), color=:red, linestyle=:solid)
-            xlims!(ax, 0.3, 1.0)
-            ylims!(ax, 0, maximum(dia_spec[:, :]))
-            push!(Ei, 100 * ie + 50)
-            if gf.param[2] < gf.param[5]
-                push!(Ai, gf.param[2])
-                push!(Pi, gf.param[5])
-            else
-                push!(Ai, gf.param[5])
-                push!(Pi, gf.param[2])
-            end
-        else
-            continue
-        end
-    end
-    ix = round(Int, fi/6, RoundDown) + 1
-    ax = Axis(fig[ix+1:ix+3, 1:6])
-    heatmap!(ax, 50:100:100*128+50, 0:0.01:1.28, dia_spec[:, :])
-    scatter!(ax, Ei, Ai, marker=:cross, color=:red, markersize=5)
-    scatter!(ax, Ei, Pi, marker=:xcross, color=:gray, markersize=5)
-    bf = curve_fit(b, Ei, Ai, [30000.0, 0.6])
-    lines!(ax, 550:100:E_lim+100, b(550:100:E_lim+100, bf.param), 
-           color=:orange, linestyle=:dash)
-    xlims!(100, E_lim + 1000)
-    ylims!(0, 1.2)
-    save("b_$loc.png", fig)
-    bf.param
-end
-
-
-function double_reader(caen_dir_name, dia_dir_name, configfile::String)
-    config = TOML.parsefile(configfile)
-    double_reader(caen_dir_name, dia_dir_name, config)
-end
-
-
-"""
-    Read both caen and dia files
-"""
-function double_reader(caen_dir_name, dia_dir_name, config::Dict;
-        chunk_size=10_000)
-
-    time_start = Dates.Time(Dates.now())
-    files_caen = readdir(caen_dir_name, join=true)
-    filter!(x->endswith(x, ".caendat"), files_caen)
-
-    files_dia = readdir(dia_dir_name, join=true)
-    filter!(x->split(x, '.')[2] == "dat", files_dia)
-    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
-
-    cfin = open(files_caen[1], "r")
-    i_caen = 1
-    if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
-        header = zeros(UInt32, 12)
-        read!(cfin, header)
-        agava_ts = header[4] % UInt64
-        agava_ts = agava_ts << 32 + header[5] % UInt64
-    else
-        @warn "Could not read agava time stamp"
-        return 0
-    end
-
-    i_dia = 1
-    dfin = open(files_dia[1], "r")
-
-    caen_good = true
-    dia_good = true
-    t_caen = 0
-    t_dia = 0
-    
-    chunk = zeros(CalHit, chunk_size)
-    i_chunk = 1
-    chunk_number = 1
-    empty = RawHit()
-
-    n_caen = 0
-    n_dia = 0
-    block_caen = true
-    block_dia = true
-    while caen_good || dia_good
-
-        hits = RawHit[]
-        if (caen_good && t_dia >= t_caen) || !(dia_good)
-            try
-                hits = read_aggregate(cfin, config)
-            catch err
-                println(err)
-            end
-            t_caen = hits[end].ts
-            n_caen += length(hits)
-        elseif (dia_good && t_dia < t_caen) || !(caen_good)
-            while true
-                try
-                    hit = read_diahit(dfin, agava_ts)
-                    if hit !== empty
-                        push!(hits, hit)
-                        t_dia = hit.ts
-                        n_dia += 1
-                        break
-                    end
-                catch err
-                    if eof(dfin)
-                        break
-                    else
-                        println(err)
-                    end
-                end
-            end
-        end
-
-        #TODO
-        # Add to chunk, analyze
-        
-        i_chunk += length(hits)
-        if i_chunk > chunk_size
-            i_chunk = 0
-            chunk_number += 1
-
-            if chunk_number % 100 == 0
-                print("\r")
-                for i in 1:i_caen-1
-                    print("\u25C9") 
-                end
-                if block_caen
-                    print("\u25CE")
-                    block_caen = false
-                else
-                    print("\u25E6")
-                    block_caen = true
-                end
-                for i in 1:length(files_caen)-i_caen
-                    print("\u25CB")
-                end
-                print(" ")
-                for i in 1:i_dia-1
-                    print("\u25CD") 
-                end
-                if block_dia
-                    print("\u25CE")
-                    block_dia = false
-                else
-                    print("\u25E6")
-                    block_dia = true
-                end
-                for i in 1:length(files_dia)-i_dia
-                    print("\u25CC")
-                end
-                dtime = (Dates.Time(Dates.now()) - time_start)
-                @printf(" %8.2f s ", dtime.value * 1e-9)
-            end
-        end
-
-        if eof(cfin)
-            close(cfin)
-            if i_caen < length(files_caen)
-                i_caen += 1
-                cfin = open(files_caen[i_caen], "r")
-            else
-                caen_good = false
-            end
-        end
-        if eof(dfin)
-            close(dfin)
-            if i_dia < length(files_dia)
-                i_dia += 1
-                dfin = open(files_dia[i_dia], "r")
-            else
-                dia_good = false
-            end
-        end
-    end
-    n_caen, n_dia
 end

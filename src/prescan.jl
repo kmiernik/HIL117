@@ -1,3 +1,20 @@
+function quadquad(x::Real, p)
+    if x < p[6]
+        return p[1] + p[2] * x + p[7] * x^2
+    else
+        return p[3] + p[4] * x + p[5] * x^2
+    end
+end
+
+
+function quadquad(x, p)
+    y = zeros(size(x))
+    for (i, xi) in enumerate(x)
+        y[i] = quadquad(xi, p)
+    end
+    y
+end
+
 
 """
 """
@@ -266,8 +283,7 @@ end
     Based on t_loc table (dt_min:dt:dt_max) calculates t_loc value for
     each channel, returns config Dict with updated values
 """
-function find_shifts(t_loc, config; dt_min=-1000, dt=1, dt_max=1000,
-                                    doplot=false)
+function find_shifts(t_loc, config; dt_min=-1000, dt=1, dt_max=1000)
     last_label = size(t_loc)[1]
     new_config = copy(config)
     for loc in 1:last_label
@@ -283,25 +299,6 @@ function find_shifts(t_loc, config; dt_min=-1000, dt=1, dt_max=1000,
         xm = argmax(y)
         new_config["label"]["$loc"]["dt"] = mean(t[xm-7:xm+7], 
                                             weights(y[xm-7:xm+7]))
-        if doplot
-            fig = Figure(size=(600, 400))
-            ax = Axis(fig[1, 1]; title="$loc")
-            scatter!(ax, t, y)
-            scatter!(ax, t[xm-7:xm+7], y[xm-7:xm+7], 
-                    marker=:cross, color=:red)
-            vlines!(ax, [new_config["label"]["$loc"]["dt"]], 
-                    color=:red, linestyle=:dot)
-            if config["label"]["$loc"]["type"] == "Ge"
-                xlims!(ax, t[xm-50], t[xm+50])
-            elseif config["label"]["$loc"]["type"] == "BGO"
-                xlims!(ax, t[xm-100], t[xm+100])
-            elseif config["label"]["$loc"]["type"] == "DIAMANT"
-                xlims!(ax, t[xm-100], t[xm+100])
-            elseif config["label"]["$loc"]["type"] == "NEDA"
-                xlims!(ax, t[xm-20], t[xm+20])
-            end
-            save(@sprintf("t_loc_%03d.png", loc), fig)
-        end
     end
     new_config
 end
@@ -310,7 +307,7 @@ end
 
 """
     find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1, 
-                                        dt_max=1000)
+                                    t_safe=200, dt_max=1000)
 
     Find beam period based on NEDA detector timing
 
@@ -322,8 +319,7 @@ end
     returns config with updated value
 """
 function find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1, 
-                                    t_safe=200,
-                                    dt_max=1000, doplot=false)
+                                    t_safe=200, dt_max=1000)
     
     i1 = round(Int64, (t_safe-dt_min) / dt)
     i2 = i1 + round(Int64, 512 / dt) - 1
@@ -346,15 +342,6 @@ function find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1,
     new_config = copy(config)
     new_config["spectra"]["beam_period"] = mean(localmins[2:end] 
                                                 - localmins[1:end-1])
-    if doplot
-        fig = Figure(size=(600, 400))
-        ax = Axis(fig[1, 1]; xlabel="t (ns)", 
-                title=@sprintf("%.3f ns", new_config["spectra"]["beam_period"]))
-        scatter!(ax, tm, ym)
-        vlines!(ax, localmins, color=:red, linestyle=:dash)
-        save("period.png", fig)
-    end
-
     new_config
 end
 
@@ -371,7 +358,7 @@ end
     Take E_loc table and perform fine calibration for the run
     Returns new config with fcal fields for Ge
 """
-function fine_cal(E_loc, config::Dict; doplot=false)
+function fine_cal(E_loc, config::Dict)
     new_config = copy(config)
 
     lines = [
@@ -416,38 +403,11 @@ function fine_cal(E_loc, config::Dict; doplot=false)
             end
             push!(Efit, pf.param[2])
             push!(sfit, pf.param[3])
-
-            if doplot
-                ix = round(Int, (ip-1)/4, RoundDown)+1
-                iy = (ip-1)%4+1
-                ax = Axis(fig[ix, iy]; title="$(lines[ip, 1])")
-                stairs!(ax, E0-dE-10:E0+dE+10, 
-                        vec(E_loc[loc, E0-dE-10:E0+dE+10]))
-                lines!(ax, E0-dE:0.1:E0+dE, gausslin(E0-dE:0.1:E0+dE, 
-                                                pf.param), color="red")
-            end
         end
 
         lf = curve_fit(lin, Efit, lines[:, 1], [0.0, 1.0] )
         qf = curve_fit(quad, Efit, lines[:, 1], [0.0, 1.0, 0.0] )
         new_config["label"]["$loc"]["fcal"] = qf.param
-        if doplot
-            @printf("%4d L: %.3f Q: %.3f\n", loc, maximum(abs.(lf.resid)),
-                                    maximum(abs.(qf.resid)))
-            axl = Axis(fig[3, 1]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                        limits=(0, 1500, nothing, nothing), title="Lin")
-            axq = Axis(fig[3, 2]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                        limits=(0, 1500, nothing, nothing), title="Quad")
-            axs = Axis(fig[3, 3]; ylabel="σ (%)", xlabel="E (keV)", 
-                        limits=(0, 1500, nothing, nothing))
-            scatter!(axl, lines[:, 1], lf.resid, 
-                     color="black", marker=:circle)
-            scatter!(axq, lines[:, 1], qf.resid, 
-                     color="blue", marker=:utriangle)
-            scatter!(axs, lines[:, 1], abs.(sfit),
-                    color="violet", marker=:star6)
-            save(@sprintf("fcal_%02d.png", loc), fig)
-        end
     end
     new_config
 end

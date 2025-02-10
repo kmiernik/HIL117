@@ -1,0 +1,4 @@
+[deps]
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+HIL117 = "28c194ab-b10c-4935-839c-027c944ad6db"
+MTools = "81263d5a-55d9-4353-ac59-8b9e38c9ddc0"
