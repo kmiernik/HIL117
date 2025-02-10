@@ -194,3 +194,57 @@ function read_diahit(fin, agava_ts; time_scale=2.5, energy_div=512, top_div=64)
         return RawHit()
     end
 end
+
+
+"""
+    read_diahit(fin, agava_ts, buf_size; 
+                    time_scale=2.5, energy_div=512, top_div=64)
+
+    Buffered version reading buf_size hits
+"""
+function read_diahit(fin, agava_ts, buf_size; 
+                    time_scale=2.5, energy_div=512, top_div=64)
+    hits = RawHit[]
+    for i in 1:buf_size
+        header = read(fin, 8)
+
+        metatype = header[1]
+        bigendian = ifelse((metatype & 0x80) == 0x00, true, false)
+
+        framesize = cast_u24(header[2:4], bigendian)
+        frametype = cast_u16(header[6:7], bigendian)
+        datasize = (1 << (metatype & 0x0F)) * framesize
+
+        if frametype == 0x0016
+            data = read(fin, datasize-8)
+
+            eventtime = cast_u48(data[5:10], bigendian)
+            if eventtime < agava_ts
+                continue
+            else
+                eventtime -= agava_ts
+            end
+
+            crystal_board_id = cast_u16(data[11:12], bigendian)
+            boardid = ((crystal_board_id >> 5) & 0x07ff) % UInt16
+            crystalid = (crystal_board_id & 0x001f) % UInt16
+            energy = cast_u32(data[15:18], bigendian)
+            top = cast_u32(data[19:22], bigendian)
+
+            if (energy / energy_div > typemax(UInt16) 
+                || top / top_div > typemax(UInt16))
+                continue
+            end
+
+            push!(hits, RawHit(board_translation[boardid], UInt8(crystalid),
+                        round(UInt16, energy / energy_div), 
+                        round(UInt64, eventtime * time_scale), 
+                        zero(Int16),
+                        round(UInt16, top / top_div)))
+        else
+            skip(fin, datasize - 8)
+            continue
+        end
+    end
+    hits
+end

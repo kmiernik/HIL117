@@ -111,21 +111,37 @@ end
 
 
 """
-    function distance(config, valid_table, last_label)
+    distance(config, valid_table, last_label)
 
-    Create distance_table between detectors,
+    Create distance_table between detectors, additional index (last)
+    is for distance to the target
 
     returns table in distances (meters)
     
 """
 function distance(config, valid_table, last_label; def_value=3.0)
-    distance_table = ones(Float64, last_label, last_label) .* def_value
+    distance_table = ones(Float64, last_label+1, last_label+1) .* def_value
+    distance_table[last_label+1, last_label+1] = 0.0
     for i in 1:last_label
         if !valid_table[i]
             continue
         end
         distance_table[i, i] = 0.0
-        for j in i+1:last_label
+        for j in i+1:last_label+1
+            if j == last_label+1
+                if (config["label"]["$i"]["type"] == "Ge" 
+                    || config["label"]["$i"]["type"] == "BGO")
+                    distance_table[i, j] = 1.0
+                    distance_table[j, i] = 1.0
+                elseif config["label"]["$i"]["type"] == "NEDA" 
+                    distance_table[i, j] = 1.0
+                    distance_table[j, i] = 1.0
+                elseif config["label"]["$i"]["type"] == "DIAMANT" 
+                    distance_table[i, j] = 0.0
+                    distance_table[j, i] = 0.0
+                end
+                continue
+            end
             if !valid_table[j]
                 continue
             end
@@ -588,7 +604,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
     for i in 1:i_caen-1
         print("\u25C9") 
     end
-    if 0 <= cpos < 0.25
+    if 0 < cpos < 0.25
         if block_caen
             print("\u25D4")
             block_caen = false
@@ -612,7 +628,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
             print("\u25D1")
             block_caen = true
         end
-    elseif cpos < 1.0
+    elseif 0.75 <= cpos < 1.0
         if block_caen
             print("\u25CF")
             block_caen = false
@@ -620,7 +636,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
             print("\u25D5")
             block_caen = true
         end
-    else
+    elseif cpos == 1.0
         print("\u25C9")
         block_caen = false
     end
@@ -631,7 +647,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
     for i in 1:i_dia-1
         print("\u25C9") 
     end
-    if 0 <= dpos < 0.25
+    if 0 < dpos < 0.25
         if block_dia
             print("\u25D4")
             block_dia = false
@@ -655,7 +671,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
             print("\u25D1")
             block_dia = true
         end
-    elseif dpos < 1.0
+    elseif 0.75 <= dpos < 1.0
         if block_dia
             print("\u25CF")
             block_dia = false
@@ -663,7 +679,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
             print("\u25D5")
             block_dia = true
         end
-    else
+    elseif dpos == 1.0
         print("\u25C9")
         block_dia = false
     end
@@ -671,7 +687,7 @@ function progress_dots(prefix, time_start, cpos, dpos,
         print("\u25CB")
     end
     dtime = (Dates.Time(Dates.now()) - time_start)
-    @printf(" %8.2f s ", dtime.value * 1e-9)
+    @printf(" %8.1f s ", dtime.value * 1e-9)
 
     return block_caen, block_dia
 end
@@ -684,13 +700,14 @@ end
 
 
 """
-    scan_run(data_dir, config::Dict, prefix; chunk_size=10_000, n_prescan)
+    scan_run(data_dir, config::Dict, prefix; 
+             chunk_size=10_000, dia_buf=100, n_prescan)
 
     Scan run pointed by data_dir (notice that both caendat and diamant files
     must be present).
     First a prescan is performed on n_prescan.
     Both caen and dia files are read simultanuesly (keeping hits time about
-    the same).
+    the same). Dia is read in dia_buf bunches.
     Most of the parameters are configured in the config TOML file.
     chunk_size is number of hits to be broken into events (of length equal to
     beam period).
@@ -698,7 +715,7 @@ end
     Returns 0 if no errors, 1 in case of error (along with warn message)
 """
 function scan_run(data_dir, config::Dict, prefix; 
-                    chunk_size=10_000, n_prescan=2)
+                    chunk_size=10_000, dia_buf=100, n_prescan=2)
 
     time_start = Dates.Time(Dates.now())
     files_caen = readdir(data_dir, join=true)
@@ -822,25 +839,21 @@ function scan_run(data_dir, config::Dict, prefix;
             try
                 hits = read_aggregate(cfin, config)
             catch err
-                println(err)
+                throw(err)
             end
-            t_caen = hits[end].ts
+            if size(hits)[1] > 0
+                t_caen = hits[end].ts
+            end
         elseif (dia_good && t_dia < t_caen) || !(caen_good)
-            while true
-                try
-                    hit = read_diahit(dfin, agava_ts)
-                    if hit !== empty
-                        push!(hits, hit)
-                        t_dia = hit.ts
-                        break
-                    end
-                catch err
-                    if eof(dfin)
-                        break
-                    else
-                        println(err)
-                    end
+            try
+                hits = read_diahit(dfin, agava_ts, dia_buf)
+            catch err
+                if !eof(dfin)
+                    throw(err)
                 end
+            end
+            if size(hits)[1] > 0
+                t_dia = hits[end].ts
             end
         end
 

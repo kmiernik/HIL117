@@ -75,7 +75,9 @@ function prescan(data_dir, config::Dict;
 
     i_file = 0
     t_ref = Float64[]
-    block_rt = false
+    block_caen = true
+    block_dia = true
+    n_print = 10_000_000
     time_start = Dates.Time(Dates.now())
     for filename in files_caen
         i_file += 1
@@ -100,23 +102,17 @@ function prescan(data_dir, config::Dict;
             end
             for hit in hits
                 n_hits += 1
-                if n_hits % 1_000_000 == 0
-                    print("\r    \u25E6 ref. time: ")
-                    for i in 1:i_file-1
-                        print("\u25C9")
-                    end
-                    if block_rt
-                        print("\u25D0")
-                        block_rt = false
+                if n_hits % n_print == 0
+                    if isopen(cfin)
+                        cpos = position(cfin) / csize
                     else
-                        print("\u25D1")
-                        block_rt = true
+                        cpos = 1.0
                     end
-                    for i in i_file+1:n_files
-                        print("\u25CB")
-                    end
-                    dtime = (Dates.Time(Dates.now()) - time_start)
-                    @printf(" %8.2f s ", dtime.value * 1e-9)
+                    block_caen, block_dia = progress_dots(
+                                                  "    \u25E6 ref. time  : ",
+                                                    time_start, cpos, 0.0,
+                                                    i_caen, block_caen, n_files,
+                                                    0, block_dia, 0)
                 end
                 if hit.board * 16 + hit.ch + 1 != ref_label
                     continue
@@ -133,12 +129,10 @@ function prescan(data_dir, config::Dict;
     i_ref = 1
     n_ref = length(t_ref)
 
-    print("\r    \u25E6 ref. time: ")
-    for i in 1:n_files
-        print("\u25C9")
-    end
-    dtime = (Dates.Time(Dates.now()) - time_start)
-    @printf(" %8.2f s \n", dtime.value * 1e-9)
+    progress_dots("    \u25E6 ref. time  : ", time_start, 1.0, 0.0,
+                    n_files, block_caen, n_files,
+                    0, block_dia, 0)
+    println()
     
     i_dia = 1
     dfin = open(files_dia[1], "r")
@@ -150,9 +144,6 @@ function prescan(data_dir, config::Dict;
     t_dia = 0
     
     n_hits = 0
-    block_caen = true
-    block_dia = true
-    time_start = Dates.Time(Dates.now())
 
     while caen_good || dia_good
 
@@ -161,25 +152,21 @@ function prescan(data_dir, config::Dict;
             try
                 hits = read_aggregate(cfin, config)
             catch err
-                println(err)
+                throw(err)
             end
-            t_caen = hits[end].ts
+            if size(hits)[1] > 0
+                t_caen = hits[end].ts
+            end
         elseif (dia_good && t_dia < t_caen) || !(caen_good)
-            while true
-                try
-                    hit = read_diahit(dfin, agava_ts)
-                    if hit !== empty
-                        push!(hits, hit)
-                        t_dia = hit.ts
-                        break
-                    end
-                catch err
-                    if eof(dfin)
-                        break
-                    else
-                        println(err)
-                    end
+            try
+                hits = read_diahit(dfin, agava_ts, 100)
+            catch err
+                if !eof(dfin)
+                    throw(err)
                 end
+            end
+            if size(hits)[1] > 0
+                t_dia = hits[end].ts
             end
         end
 
@@ -225,7 +212,7 @@ function prescan(data_dir, config::Dict;
                 end
             end
 
-            if n_hits % 1_000_000 == 0
+            if n_hits % n_print == 0
                 if isopen(cfin)
                     cpos = position(cfin) / csize
                 else
@@ -236,7 +223,7 @@ function prescan(data_dir, config::Dict;
                 else
                     dpos = 1.0
                 end
-                block_caen, block_dia = progress_dots("    \u25E6 prescan  : ",
+                block_caen, block_dia = progress_dots("    \u25E6 prescan    : ",
                                                 time_start, cpos, dpos,
                                                 i_caen, block_caen, n_files,
                                                 i_dia, block_dia, n_files)
@@ -265,7 +252,7 @@ function prescan(data_dir, config::Dict;
             end
         end
     end
-    progress_dots("    \u25E6 prescan  : ", time_start, 1.0, 1.0,
+    progress_dots("    \u25E6 prescan    : ", time_start, 1.0, 1.0,
                     i_caen, block_caen, n_files,
                     i_dia, block_dia, n_files)
 
