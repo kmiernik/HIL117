@@ -87,21 +87,19 @@ function read_diahit_full(fin)
     datasize = (1 << (metatype & 0x0F)) * framesize
 
     if frametype == 0x0016
-        info = read(fin, 10)
+        data = read(fin, datasize-8)
 
-        eventidx = cast_u32(info[1:4], bigendian)
-        eventtime = cast_u48(info[5:10], bigendian)
+        eventidx = cast_u32(data[1:4], bigendian)
+        eventtime = cast_u48(data[5:10], bigendian)
 
-        data = read(fin, 14)
-
-        crystal_board_id = cast_u16(data[1:2], bigendian)
+        crystal_board_id = cast_u16(data[11:12], bigendian)
         boardid = ((crystal_board_id >> 5) & 0x07ff) % UInt16
         crystalid = (crystal_board_id & 0x001f) % UInt16
-        status1 = data[3]
-        status2 = data[4]
-        energy = cast_u32(data[5:8], bigendian)
-        top = cast_u32(data[9:12], bigendian)
-        checksum = cast_u16(data[13:14], bigendian)
+        status1 = data[13]
+        status2 = data[14]
+        energy = cast_u32(data[15:18], bigendian)
+        top = cast_u32(data[19:22], bigendian)
+        checksum = cast_u16(data[23:24], bigendian)
 
         return DiaHit(metatype, framesize, frametype, datasource, 
                       revision, datasize,
@@ -166,20 +164,20 @@ function read_diahit(fin, agava_ts; time_scale=2.5, energy_div=512, top_div=64)
     datasize = (1 << (metatype & 0x0F)) * framesize
 
     if frametype == 0x0016
-        info = read(fin, 10)
-        eventtime = cast_u48(info[5:10], bigendian)
+        data = read(fin, datasize-8)
 
-        data = read(fin, 14)
+        eventtime = cast_u48(data[5:10], bigendian)
         if eventtime < agava_ts
             return RawHit()
         else
             eventtime -= agava_ts
         end
-        crystal_board_id = cast_u16(data[1:2], bigendian)
+
+        crystal_board_id = cast_u16(data[11:12], bigendian)
         boardid = ((crystal_board_id >> 5) & 0x07ff) % UInt16
         crystalid = (crystal_board_id & 0x001f) % UInt16
-        energy = cast_u32(data[5:8], bigendian)
-        top = cast_u32(data[9:12], bigendian)
+        energy = cast_u32(data[15:18], bigendian)
+        top = cast_u32(data[19:22], bigendian)
 
         if (energy / energy_div > typemax(UInt16) 
             || top / top_div > typemax(UInt16))

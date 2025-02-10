@@ -8,14 +8,20 @@ using Infiltrator
 using Printf
 using Dates
 using StatsBase
+using HDF5
 
 include("caendat.jl")
-export RawHit, read_aggregate
 
 include("diadat.jl")
 
 include("tools.jl")
-export read_raw_data
+
+include("prescan.jl")
+
+include("edf.jl")
+
+include("scan.jl")
+export scan_run
 
 include("dev.jl")
 

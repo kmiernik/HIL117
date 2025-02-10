@@ -121,12 +121,19 @@ function nicetoml(config, tomlfile, additional_comment="")
     print(fout, "\n")
 
     print(fout, "[spectra]\n")
-    parnames = ["dE", "Emax", "dt", "t_prompt_low", "t_prompt_high", 
-                "Mmax", "coin", "beam_period",
-                "bgo_low", "ge_low", "neda_low", "dia_low"]
-
+    parnames = ["dE", "Emax", "E2max", "dt", "tmax", "dpid", "pidmax",
+                "Mmax", "ge_low", "bgo_low", "neda_low", "dia_low",
+                "beam_period"]
     for par in parnames
         print(fout, "\t$par = ", config["spectra"][par], "\n")
+    end
+    print(fout, "\n")
+
+    print(fout, "[pid]\n")
+    pidnames = ["En_low", "n_low", "n_high", "a_low", "a_high",
+                "p_low", "p_high"]
+    for par in pidnames
+        print(fout, "\t$par = ", config["pid"][par], "\n")
     end
     print(fout, "\n")
 
@@ -147,6 +154,9 @@ function nicetoml(config, tomlfile, additional_comment="")
             print(fout, "\tcal = [0.0, 1.0, 0.0, 1.0, 0.0, 0.0]\n")
         else
             print(fout, "\tcal = [0.0, 1.0]\n")
+        end
+        if haskey(entry.second, "fcal")
+            print(fout, "\tfcal = ", entry.second["fcal"], "\n")
         end
         print(fout, "\tvalid = ", entry.second["valid"], "\n")
         if haskey(entry.second, "comment")

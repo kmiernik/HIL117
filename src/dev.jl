@@ -712,92 +712,6 @@ function find_shift_table(config_file, dir_name; ref_label=34,
     shift
 end
 
-
-"""
-    find_shifts(shift, config; dt_min=-1000, dt=1, dt_max=1000)
-    
-    Based on shift table (dt_min/dt/dt_max) calculates shift value for
-    each channel, returns config Dict with updated values
-"""
-function find_shifts(shift, config; dt_min=-1000, dt=1, dt_max=1000,
-                                    doplot=false)
-    last_label = size(shift)[1]
-    new_config = copy(config)
-    for loc in 1:last_label
-        if sum(shift[loc, :]) == 0
-            continue
-        end
-        y = vec(shift[loc, :])
-        t = dt_min:dt:dt_max
-        if config["label"]["$loc"]["type"] == "Ge"
-            y = vec(rebin(y, 4))
-            t = dt_min:dt*4:dt_max .+ dt .* 2
-        end
-        xm = argmax(y)
-        new_config["label"]["$loc"]["dt"] = mean(t[xm-7:xm+7], 
-                                            weights(y[xm-7:xm+7]))
-        if doplot
-            fig = Figure(size=(600, 400), title="$loc")
-            ax = Axis(fig[1, 1])
-            scatter!(ax, t, y)
-            scatter!(ax, t[xm-7:xm+7], y[xm-7:xm+7], 
-                    marker=:cross, color=:red)
-            vlines!(ax, [new_config["label"]["$loc"]["dt"]], 
-                    color=:red, linestyle=:dot)
-            if config["label"]["$loc"]["type"] == "Ge"
-                xlims!(ax, t[xm-50], t[xm+50])
-            elseif config["label"]["$loc"]["type"] == "BGO"
-                xlims!(ax, t[xm-100], t[xm+100])
-            elseif config["label"]["$loc"]["type"] == "NEDA"
-                xlims!(ax, t[xm-20], t[xm+20])
-            end
-            save(@sprintf("shift_%03d.png", loc), fig)
-        end
-    end
-    new_config
-end
-
-
-"""
-    find_period(shift, config; period_loc=35, dt_min=-1000, dt=1, 
-                                        dt_max=1000)
-
-    Find beam period based on NEDA detector timing
-
-    512 ns samples in a "safe" range
-    detector next to ref (default 34, first NEDA) 
-    shouldn't have scattering "echos"
-    finding minima in the safe range will give off-beam period
-    
-    returns config with updated value
-"""
-function find_period(shift, config; period_loc=35, dt_min=-1000, dt=1, 
-                                    dt_max=1000)
-    
-    i1 = round(Int64, (200-dt_min) / dt)
-    i2 = i1 + round(Int64, 512 / dt) - 1
-    tm = collect(dt_min:dt:dt_max)[i1:i2]
-    ym = copy(shift[period_loc, i1:i2])
-    ym4 = vec(rebin(ym, 4))
-
-    ic = 4
-    localmins = Float64[]
-    while ic < 124
-        ic += 1
-        if ((ym4[ic-3] > ym4[ic-2] > ym4[ic-1] > ym4[ic]) &&
-            (ym4[ic] < ym4[ic+1] < ym4[ic+2] < ym4[ic+3]))
-            fi = ic * 4 - 2
-            qf = curve_fit(quad, tm[fi-7:fi+7], ym[fi-7:fi+7], [0.0, 1.0, 0.0])
-            push!(localmins, -qf.param[2] / (2 * qf.param[3]))
-            ic += 3
-        end
-    end
-    new_config = copy(config)
-    new_config["spectra"]["beam_period"] = mean(localmins[2:end] 
-                                                - localmins[1:end-1])
-    new_config
-end
-
 """
     pid - particle id
     0 - gamma
@@ -1030,93 +944,6 @@ function test_scan(dir_name, config::Dict)
 end
 
 
-"""
-
-    Take E_loc table and perform fine calibration for the run
-"""
-function fine_cal(E_loc, configfile; doplot=false)
-    config = TOML.parsefile(configfile)
-    new_config = copy(config)
-
-    lines = [
-             294.17 3
-             346.71 5
-             373.75 5
-             409.20 5
-             511.00 5
-             552.05 3
-             #657.76 4
-             #1256.69 5
-             1293.56 15
-             #1299.91 5
-            ]
-    for loc in 1:2:32
-        if !config["label"]["$loc"]["valid"]
-            continue
-        end
-        
-        Efit = Float64[]
-        sfit = Float64[]
-        ip = 0
-        fig = Figure(size=(1000, 1000), title="$loc")
-        n_peaks = size(lines)[1]
-        guess = []
-        for ip in 1:n_peaks
-            E0 = round(Int64, lines[ip, 1])
-            dE = round(Int64, lines[ip, 2])
-            guess = [maximum(E_loc[loc, E0-dE:E0+dE]),
-                        argmax(E_loc[loc, E0-dE:E0+dE])+E0-dE,
-                        1.0, 
-                        E_loc[loc, E0-dE], 0.0 ]
-            pf = curve_fit(gausslin, E0-dE:E0+dE, 
-                        E_loc[loc, E0-dE:E0+dE], 
-                        guess, 
-                        lower=[0, E0-dE, 0.8, -Inf, -Inf],
-                        upper=[sum(E_loc[loc, E0-dE:E0+dE]), E0+dE, 3.0, Inf, Inf])
-            pferr = pf.param
-            try
-                pferr = standard_errors(pf)
-            catch
-            end
-            push!(Efit, pf.param[2])
-            push!(sfit, pf.param[3])
-
-            if doplot
-                ix = round(Int, (ip-1)/4, RoundDown)+1
-                iy = (ip-1)%4+1
-                ax = Axis(fig[ix, iy]; title="$(lines[ip, 1])")
-                stairs!(ax, E0-dE-10:E0+dE+10, 
-                        vec(E_loc[loc, E0-dE-10:E0+dE+10]))
-                lines!(ax, E0-dE:0.1:E0+dE, gausslin(E0-dE:0.1:E0+dE, 
-                                                pf.param), color="red")
-            end
-        end
-
-        lf = curve_fit(lin, Efit, lines[:, 1], [0.0, 1.0] )
-        qf = curve_fit(quad, Efit, lines[:, 1], [0.0, 1.0, 0.0] )
-        new_config["label"]["$loc"]["fcal"] = qf.param
-        if doplot
-            @printf("%4d L: %.3f Q: %.3f\n", loc, maximum(abs.(lf.resid)),
-                                    maximum(abs.(qf.resid)))
-            axl = Axis(fig[3, 1]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                        limits=(0, 1500, nothing, nothing), title="Lin")
-            axq = Axis(fig[3, 2]; ylabel="ΔE (keV)", xlabel="E (keV)", 
-                        limits=(0, 1500, nothing, nothing), title="Quad")
-            axs = Axis(fig[3, 3]; ylabel="σ (%)", xlabel="E (keV)", 
-                        limits=(0, 1500, nothing, nothing))
-            scatter!(axl, lines[:, 1], lf.resid, 
-                     color="black", marker=:circle)
-            scatter!(axq, lines[:, 1], qf.resid, 
-                     color="blue", marker=:utriangle)
-            scatter!(axs, lines[:, 1], abs.(sfit),
-                    color="violet", marker=:star6)
-            save(@sprintf("fcal_%02d.png", loc), fig)
-        end
-    end
-    new_config
-end
-
-
 function test_neda(dir_name, configfile::String)
     config = TOML.parsefile(configfile)
     test_neda(dir_name, config)
@@ -1194,9 +1021,180 @@ function test_neda(dir_name, config::Dict)
 end
 
 
-function test_merge(caen_dir_name, dia_dir_name, configfile::String)
+function dia_banana_fit(dia_dir_name, configfile::String;
+                        args...)
     config = TOML.parsefile(configfile)
-    test_merge(caen_dir_name, dia_dir_name, config)
+    dia_banana_fit(dia_dir_name, config; args...)
+end
+
+"""
+    Read both caen and dia files
+"""
+function dia_banana_fit(dia_dir_name, config::Dict; 
+                        n_files=3, c_lim=3000, E_lim=3000, arr_mode=false,
+                        pid_mode=false)
+
+    time_start = Dates.Time(Dates.now())
+
+    files_dia = readdir(dia_dir_name, join=true)
+    filter!(x->split(x, '.')[2] == "dat", files_dia)
+    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+
+    loc_dia_start = -1
+    loc_dia_end = -1
+    for loc in keys(config["label"])
+        l = parse(Int64, loc)
+        if config["label"]["$loc"]["type"] == "DIAMANT"
+            if l > loc_dia_end || loc_dia_end < 0
+                loc_dia_end = l
+            end
+            if l < loc_dia_start || loc_dia_start < 0
+                loc_dia_start = l
+            end
+        end
+    end
+
+    cal_dia = zeros(2, loc_dia_end-loc_dia_start+1)
+    if pid_mode
+        for loc in keys(config["label"])
+            l = parse(Int64, loc)
+            if config["label"]["$loc"]["type"] == "DIAMANT"
+                cal_dia[:, l-loc_dia_start+1] = config["label"]["$loc"]["cal"]
+            end
+        end
+    end
+
+    i_dia = 1
+    dfin = open(files_dia[1], "r")
+
+    dia_good = true
+    
+    dia_id = zeros(Int32, 64, 128, 128)
+
+    block_dia = true
+    i_hit = 0
+    while dia_good
+
+        try
+            hit = read_diahit(dfin, 0)
+
+            loc = hit.board * 16 + hit.ch + 1
+            i_hit += 1
+            if loc_dia_start <= loc <= loc_dia_end
+                iE = round(Int64, hit.E / 100, RoundDown)
+                iT = 0
+                if pid_mode
+                    if hit.E > 100
+                        E = Float64(hit.E)
+                        T = Float64(hit.qshort)
+                        pid = (T / E 
+                            - cal_dia[1, loc-loc_dia_start+1] / E^2 
+                            - cal_dia[2, loc-loc_dia_start+1] + 0.5)
+                        iT = round(Int64, pid * 100)
+                    end
+                else
+                    iT = round(Int64, hit.qshort / hit.E * 100)
+                end
+                if 1 <= iE <= 128 && 1 <= iT <= 128
+                    dia_id[loc-loc_dia_start+1, iE, iT] += 1
+                end
+            end
+            if i_hit % 10_000_000 == 0
+                print("\r")
+                for i in 1:i_dia-1
+                    print("\u25CD") 
+                end
+                if block_dia
+                    print("\u25CE")
+                    block_dia = false
+                else
+                    print("\u25E6")
+                    block_dia = true
+                end
+                for i in 1:n_files-i_dia
+                    print("\u25CC")
+                end
+                dtime = (Dates.Time(Dates.now()) - time_start)
+                @printf(" %8.2f s ", dtime.value * 1e-9)
+            end
+        catch err
+            if eof(dfin)
+                close(dfin)
+                if i_dia < n_files
+                    i_dia += 1
+                    dfin = open(files_dia[i_dia], "r")
+                else
+                    dia_good = false
+                end
+            else
+                throw(err)
+                break
+            end
+        end
+    end
+
+    if arr_mode
+        return dia_id
+    end
+
+    new_config = copy(config)
+
+    for loc in loc_dia_start:loc_dia_end
+        di = loc - loc_dia_start + 1
+        bp = fit_ban(dia_id[di, :, :], c_lim, E_lim, loc)
+        new_config["label"]["$loc"]["cal"] = bp
+    end
+    new_config
+
+end
+
+
+function fit_ban(dia_spec, c_lim, E_lim, loc)        
+    Ai = Float64[]
+    Pi = Float64[]
+    Ei = Float64[]
+    fig = Figure(size=(800, 800))
+    fi = 1
+    t = 0.00:0.01:1.27
+    b(x, p) = @. p[1] / x^2 + p[2]
+    for ie in 1:size(dia_spec)[1]
+        if maximum(dia_spec[ie, :]) > c_lim && (100 * (ie - 1) < E_lim)
+            ix = round(Int, (fi-1)/6, RoundDown)+1
+            iy = (fi-1)%6+1
+            fi += 1
+            ax = Axis(fig[ix, iy]; title="$(100*ie+50)",
+                                   yticklabelsvisible=false)
+            tg = t[argmax(dia_spec[ie, :])]
+            gf = curve_fit(ngauss, t, dia_spec[ie, :], 
+                            [1000, tg, 0.03, 200, tg+0.2, 0.03])
+            scatter!(ax, t, dia_spec[ie, :], marker=:cross, markersize=5)
+            lines!(ax, t, ngauss(t, gf.param), color=:red, linestyle=:solid)
+            xlims!(ax, 0.3, 1.0)
+            ylims!(ax, 0, maximum(dia_spec[:, :]))
+            push!(Ei, 100 * ie + 50)
+            if gf.param[2] < gf.param[5]
+                push!(Ai, gf.param[2])
+                push!(Pi, gf.param[5])
+            else
+                push!(Ai, gf.param[5])
+                push!(Pi, gf.param[2])
+            end
+        else
+            continue
+        end
+    end
+    ix = round(Int, fi/6, RoundDown) + 1
+    ax = Axis(fig[ix+1:ix+3, 1:6])
+    heatmap!(ax, 50:100:100*128+50, 0:0.01:1.28, dia_spec[:, :])
+    scatter!(ax, Ei, Ai, marker=:cross, color=:red, markersize=5)
+    scatter!(ax, Ei, Pi, marker=:xcross, color=:gray, markersize=5)
+    bf = curve_fit(b, Ei, Ai, [30000.0, 0.6])
+    lines!(ax, 550:100:E_lim+100, b(550:100:E_lim+100, bf.param), 
+           color=:orange, linestyle=:dash)
+    xlims!(100, E_lim + 1000)
+    ylims!(0, 1.2)
+    save("b_$loc.png", fig)
+    bf.param
 end
 
 
@@ -1341,6 +1339,5 @@ function double_reader(caen_dir_name, dia_dir_name, config::Dict;
             end
         end
     end
-    @show n_caen
-    @show n_dia
+    n_caen, n_dia
 end

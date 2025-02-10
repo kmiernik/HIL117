@@ -30,6 +30,12 @@ function RawHit()
 end
 
 
+function Base.zero(::Type{RawHit})
+    return RawHit(zero(UInt8), zero(UInt8), zero(UInt16), 
+                  zero(UInt64), zero(Int16), zero(UInt16))
+end
+
+
 function Base.write(io::IO, hit::RawHit)
     write(io, hit.board)
     write(io, hit.ch)

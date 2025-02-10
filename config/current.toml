@@ -1,5 +1,5 @@
 title = "Config for experiment HIL117"
-comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
+comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 
 [boards]
     PHA = [0, 1]
@@ -9,16 +9,26 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 [spectra]
 	dE = 1.0
 	Emax = 4096.0
+    E2max = 2560.0
 	dt = 1.0
-	t_prompt_low = -35.0
-	t_prompt_high = 35.0
+	tmax = 100.0
+    dpid = 0.01
+    pidmax = 1.27
 	Mmax = 10
-	coin = [40.0, 0.0, 0.0]
-	beam_period = 73.89253617671976
+	ge_low = 30.0
 	bgo_low = 30.0
-	ge_low = 10.0
 	neda_low = 10.0
-	dia_low = 10.0
+	dia_low = 100.0
+	beam_period = 73.89
+
+[pid]
+    En_low = 200.0
+    n_low = 0.5
+    n_high = 0.7
+    a_low = 0.42
+    a_high = 0.56
+    p_low = 0.56
+    p_high = 0.67
 
 [label.1]
 	type = "Ge"
@@ -155,7 +165,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.15]
 	type = "Ge"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.0
 	rcal = [0.0, 1.0]
@@ -165,7 +175,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.16]
 	type = "BGO"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.0
 	cal = [0.0, 1.0]
@@ -326,7 +336,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.33]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.0
 	cal = [0.0, 1.0]
@@ -335,7 +345,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.34]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.0
 	cal = [0.0, 1.0]
@@ -344,7 +354,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.35]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -2.557
 	cal = [0.0, 1.0]
@@ -353,7 +363,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.36]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -0.185
 	cal = [0.0, 1.0]
@@ -362,7 +372,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.37]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.044
 	cal = [0.0, 1.0]
@@ -371,7 +381,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.38]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.047
 	cal = [0.0, 1.0]
@@ -380,7 +390,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.39]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.612
 	cal = [0.0, 1.0]
@@ -389,7 +399,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.40]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.892
 	cal = [0.0, 1.0]
@@ -398,7 +408,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.41]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 3.717
 	cal = [0.0, 1.0]
@@ -407,7 +417,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.42]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.919
 	cal = [0.0, 1.0]
@@ -416,7 +426,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.43]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.912
 	cal = [0.0, 1.0]
@@ -425,7 +435,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.44]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -3.276
 	cal = [0.0, 1.0]
@@ -434,7 +444,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.45]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.169
 	cal = [0.0, 1.0]
@@ -443,7 +453,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.46]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 4.137
 	cal = [0.0, 1.0]
@@ -452,7 +462,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.47]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.227
 	cal = [0.0, 1.0]
@@ -461,7 +471,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.48]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.057
 	cal = [0.0, 1.0]
@@ -470,7 +480,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.49]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.324
 	cal = [0.0, 1.0]
@@ -479,7 +489,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.50]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.333
 	cal = [0.0, 1.0]
@@ -488,7 +498,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.51]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -1.52
 	cal = [0.0, 1.0]
@@ -497,7 +507,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.52]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.394
 	cal = [0.0, 1.0]
@@ -506,7 +516,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.53]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 3.276
 	cal = [0.0, 1.0]
@@ -515,7 +525,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.54]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 4.874
 	cal = [0.0, 1.0]
@@ -524,7 +534,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.55]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -0.907
 	cal = [0.0, 1.0]
@@ -533,7 +543,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.56]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 3.23
 	cal = [0.0, 1.0]
@@ -542,7 +552,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.57]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -1.495
 	cal = [0.0, 1.0]
@@ -551,7 +561,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.58]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.778
 	cal = [0.0, 1.0]
@@ -560,7 +570,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.59]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.537
 	cal = [0.0, 1.0]
@@ -569,7 +579,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.60]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.676
 	cal = [0.0, 1.0]
@@ -578,7 +588,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.61]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.717
 	cal = [0.0, 1.0]
@@ -587,7 +597,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.62]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 3.869
 	cal = [0.0, 1.0]
@@ -596,7 +606,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.63]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.328
 	cal = [0.0, 1.0]
@@ -605,7 +615,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.64]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -1.127
 	cal = [0.0, 1.0]
@@ -614,7 +624,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.65]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.665
 	cal = [0.0, 1.0]
@@ -623,7 +633,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.66]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 3.327
 	cal = [0.0, 1.0]
@@ -632,7 +642,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.67]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 4.217
 	cal = [0.0, 1.0]
@@ -641,7 +651,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.68]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 4.483
 	cal = [0.0, 1.0]
@@ -650,7 +660,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.69]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.446
 	cal = [0.0, 1.0]
@@ -659,7 +669,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.70]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.8
 	cal = [0.0, 1.0]
@@ -668,7 +678,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.71]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 2.283
 	cal = [0.0, 1.0]
@@ -677,7 +687,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.72]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.487
 	cal = [0.0, 1.0]
@@ -686,7 +696,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.73]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.315
 	cal = [0.0, 1.0]
@@ -695,7 +705,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.74]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 6.705
 	cal = [0.0, 1.0]
@@ -704,7 +714,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.75]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.502
 	cal = [0.0, 1.0]
@@ -713,7 +723,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.76]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.941
 	cal = [0.0, 1.0]
@@ -722,7 +732,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.77]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 1.914
 	cal = [0.0, 1.0]
@@ -731,7 +741,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.78]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 5.796
 	cal = [0.0, 1.0]
@@ -740,7 +750,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.79]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 4.814
 	cal = [0.0, 1.0]
@@ -749,7 +759,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.80]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.29
 	cal = [0.0, 1.0]
@@ -758,7 +768,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.81]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -1.495
 	cal = [0.0, 1.0]
@@ -767,7 +777,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.82]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -3.641
 	cal = [0.0, 1.0]
@@ -776,7 +786,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.83]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -3.453
 	cal = [0.0, 1.0]
@@ -785,7 +795,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.84]
 	type = "NEDA"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = -3.454
 	cal = [0.0, 1.0]
@@ -794,7 +804,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.89]
 	type = "Sum"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.0
 	cal = [0.0, 1.0]
@@ -803,7 +813,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 
 [label.93]
 	type = "Trig"
-	ring = ""
+	ring = "0"
 	phi = "0"
 	dt = 0.0
 	cal = [0.0, 1.0]
@@ -811,578 +821,578 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039    "
 	comment = " "
 
 [label.97]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [35175.46107301359, 0.5805009816616173]
+	valid = true
+	comment = " "
 
 [label.98]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [37053.96102036582, 0.5952593091668368]
+	valid = true
+	comment = " "
 
 [label.99]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [38668.70233985346, 0.5995638491064301]
+	valid = true
+	comment = " "
 
 [label.100]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [44793.19563392227, 0.5740946397871257]
+	valid = true
+	comment = " "
 
 [label.101]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [36955.927435824946, 0.5892978445582031]
+	valid = true
+	comment = " "
 
 [label.102]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [59658.0225387031, 0.5912737250542797]
+	valid = true
+	comment = " "
 
 [label.103]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [36762.11513182622, 0.6023664395675731]
+	valid = true
+	comment = " "
 
 [label.104]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [42645.09911069297, 0.5973067497631412]
+	valid = true
+	comment = " "
 
 [label.105]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [48919.86986545737, 0.5756962019938352]
+	valid = true
+	comment = " "
 
 [label.106]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [41652.47841543026, 0.5657079389362418]
+	valid = true
+	comment = " "
 
 [label.107]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [40808.38373894278, 0.5880874765859074]
+	valid = true
+	comment = " "
 
 [label.108]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [39442.52740135208, 0.5773650633468765]
+	valid = true
+	comment = " "
 
 [label.109]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [40192.234117020365, 0.5827799146020173]
+	valid = true
+	comment = " "
 
 [label.110]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [30263.393264130063, 0.5735590935099032]
+	valid = true
+	comment = " "
 
 [label.111]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [34222.39037942484, 0.5980580806879204]
+	valid = true
+	comment = " "
 
 [label.112]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [41578.213191296825, 0.5926921712559026]
+	valid = true
+	comment = " "
 
 [label.113]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [54869.861612345856, 0.6428706146167187]
+	valid = true
+	comment = " "
 
 [label.114]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [52103.32817395404, 0.5895104799167292]
+	valid = true
+	comment = " "
 
 [label.115]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [40735.43036216233, 0.5914573483311083]
+	valid = true
+	comment = " "
 
 [label.116]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [46856.508832309075, 0.582262080232476]
+	valid = true
+	comment = " "
 
 [label.117]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [30245.31176970812, 0.5992928281101932]
+	valid = true
+	comment = " "
 
 [label.118]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [35170.510822774406, 0.5927636166711798]
+	valid = true
+	comment = " "
 
 [label.119]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [26053.381486279053, 0.5951076230382125]
+	valid = true
+	comment = " "
 
 [label.120]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [24805.770088383833, 0.5941938106475348]
+	valid = true
+	comment = " "
 
 [label.121]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [32432.56521637196, 0.587559572862565]
+	valid = true
+	comment = " "
 
 [label.122]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [39201.376729572934, 0.589530766151039]
+	valid = true
+	comment = " "
 
 [label.123]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [100000.0, 0.6]
+	valid = true
+	comment = " "
 
 [label.124]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [43174.33018120458, 0.5851018519053756]
+	valid = true
+	comment = " "
 
 [label.125]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [38024.28613428128, 0.5900254839549526]
+	valid = true
+	comment = " "
 
 [label.126]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [53411.615317001735, 0.5854205129515647]
+	valid = true
+	comment = " "
 
 [label.127]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [42940.88699122669, 0.5795257517533599]
+	valid = true
+	comment = " "
 
 [label.128]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [34748.51649449614, 0.5999113413505058]
+	valid = true
+	comment = " "
 
 [label.129]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [29375.407055075728, 0.5578320973196509]
+	valid = true
+	comment = " "
 
 [label.130]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [31558.596757528852, 0.5469655696875454]
+	valid = true
+	comment = " "
 
 [label.131]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [31121.749782888004, 0.55027392292341]
+	valid = true
+	comment = " "
 
 [label.132]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [31191.659868849405, 0.5589303318211847]
+	valid = true
+	comment = " "
 
 [label.133]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [64565.421771176596, 0.4968352021701244]
+	valid = true
+	comment = " "
 
 [label.134]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [48537.44016836538, 0.47909099127859633]
+	valid = true
+	comment = " "
 
 [label.135]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [37687.67967282194, 0.5067130450831486]
+	valid = true
+	comment = " "
 
 [label.136]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [21384.374907371326, 0.5461406331650641]
+	valid = true
+	comment = " "
 
 [label.137]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [33992.766945830386, 0.5633106996256755]
+	valid = true
+	comment = " "
 
 [label.138]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [29664.1281292582, 0.5635800768290652]
+	valid = true
+	comment = " "
 
 [label.139]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [59214.20888943819, 0.5305106632833675]
+	valid = true
+	comment = " "
 
 [label.140]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [34687.48789704542, 0.567854307563554]
+	valid = true
+	comment = " "
 
 [label.141]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [35362.5485183395, 0.5632285943476518]
+	valid = true
+	comment = " "
 
 [label.142]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [48830.71168467342, 0.5597997380244596]
+	valid = true
+	comment = " "
 
 [label.143]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [72364.69938389533, 0.5084386603748482]
+	valid = true
+	comment = " "
 
 [label.144]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [58927.830122524436, 0.5005796421990857]
+	valid = true
+	comment = " "
 
 [label.145]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [44358.89342596122, 0.5815060760644603]
+	valid = true
+	comment = " "
 
 [label.146]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [46766.44371451303, 0.5796991942667378]
+	valid = true
+	comment = " "
 
 [label.147]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [49004.54594371111, 0.5828335430241117]
+	valid = true
+	comment = " "
 
 [label.148]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [66510.95872814162, 0.5643867817852457]
+	valid = true
+	comment = " "
 
 [label.149]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [38416.48618693533, 0.581039502447469]
+	valid = true
+	comment = " "
 
 [label.150]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [38016.90253500753, 0.5773456035193002]
+	valid = true
+	comment = " "
 
 [label.151]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [33101.28116821523, 0.585092074870696]
+	valid = true
+	comment = " "
 
 [label.152]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [55019.580507083345, 0.5754495943081744]
+	valid = true
+	comment = " "
 
 [label.153]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [43249.30233893583, 0.5984765276848502]
+	valid = true
+	comment = " "
 
 [label.154]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [44725.89585238555, 0.5879948115404747]
+	valid = true
+	comment = " "
 
 [label.155]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [45007.261121311414, 0.5960633452458559]
+	valid = true
+	comment = " "
 
 [label.156]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [57847.65294259893, 0.6617498042650484]
+	valid = true
+	comment = " "
 
 [label.157]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [59133.05758343259, 0.5901579297829148]
+	valid = true
+	comment = " "
 
 [label.158]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [52292.567290206076, 0.573810629814108]
+	valid = true
+	comment = " "
 
 [label.159]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [44559.91806468339, 0.5824210580014292]
+	valid = true
+	comment = " "
 
 [label.160]
-    type = "DIAMANT"
-    ring = ""
-    phi = "0"
-    dt = 0.0
-    cal = [0.0, 1.0, 0.0]
-    valid = true
-    comment = " "
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [53852.89924572264, 0.5905777391824757]
+	valid = true
+	comment = " "
 
