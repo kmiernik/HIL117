@@ -67,6 +67,8 @@ function prescan(data_dir, config::Dict;
         @warn "There are no $n_files caendat file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
         n_files = length(files_caen)
     end
+
+    #TODO -> what if there are no dia files?
     if n_files > length(files_dia)
         @warn "There are no $n_files diamant file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
         n_files = length(files_caen)
@@ -381,7 +383,6 @@ function fine_cal(E_loc, config::Dict)
         Efit = Float64[]
         sfit = Float64[]
         ip = 0
-        fig = Figure(size=(1000, 1000), title="$loc")
         n_peaks = size(lines)[1]
         guess = []
         for ip in 1:n_peaks

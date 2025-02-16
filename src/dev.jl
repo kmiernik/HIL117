@@ -353,51 +353,94 @@ function cal_energy(filename, configfile)
 end
 
 
+function test_walk(data_dir, configfile::String; args...)
+    config = TOML.parsefile(configfile)
+    test_walk(data_dir, config; args...)
+end
+
 """
-    test_walk(dir_name, outname)
+    ΔT vs. E of a given detector
+    for DIAMANT ΔT vs. PID
 
-    
-    No walk correction observed and needed. Plain shift is sufficient
+    Testing time widths and walk
 """
-function test_walk(dir_name, outname)
+function test_walk(data_dir, config::Dict; 
+                n_files=2, ref_label=34, dE=8, Emax=16384, Estartmin=100, 
+                                    dt_min=-99.0, dt_max=900.0, dt=1.0)
 
-    config = TOML.parsefile("config/base.toml")
-    files = readdir(dir_name, join=true)
-    filter!(x->endswith(x, ".caendat"), files)
-
-    #=
-    cal_ge = zeros(3, 16)
-    for label in 0:2:30
-        cal_ge[:, Int(label/2) + 1] = config["label"]["$label"]["cal"]
+    last_label = 0
+    for loc in keys(config["label"])
+        if parse(Int64, loc) > last_label && config["label"]["$loc"]["valid"] 
+            last_label = parse(Int64, loc)
+        end
     end
-    =#
+    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table = config_to_tables(config, last_label)
 
-    dE = 8.0
-    Estartmin = 100
-    Emin = 20
-    Emax = 32768
-    dt_min = -1000.0
-    dt_max = 1000.0
-    dt = 1
-    ref_board = 2
-    ref_ch = 1
-    walk = zeros(Int32, 16*6, round(Int64, Emax / dE, RoundUp), 
+    walk = zeros(Int32, last_label, round(Int64, Emax / dE, RoundUp), 
                  length(dt_min:dt:dt_max))
+    #walk = zeros(Int32, 64, round(Int64, Emax / dE, RoundUp), 
+    #             length(dt_min:dt:dt_max), length(0:0.01:1.27))
+    if n_files == 0
+        @warn "No files to be prescanned"
+        return walk
+    end
+
+    files_caen = readdir(data_dir, join=true)
+    filter!(x->endswith(x, ".caendat"), files_caen)
+
+    if length(files_caen) < 1
+        @warn "No caendat files found"
+        return 0
+    end
+
+    files_dia = readdir(data_dir, join=true)
+    filter!(x->split(x, '.')[2] == "dat", files_dia)
+    if length(files_dia) > 0
+        files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+    end
+
+    if n_files > length(files_caen) && n_files > length(files_dia)
+        n_new = maximum(length(files_caen), length(files_dia))
+        @warn "There are no both $n_files caendat and diamant file(s) to be prescanned, using $(n_new) file(s) instead"
+        n_files = n_new
+    elseif n_files > length(files_dia)
+        @warn "There are no $n_files diamant file(s) to be prescanned"
+    elseif n_files > length(files_caen)
+        @warn "There are no $n_files caendat file(s) to be prescanned"
+    end
+
+    cfin = open(files_caen[1], "r")
+    i_caen = 1
+    if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
+        header = zeros(UInt32, 12)
+        read!(cfin, header)
+        agava_ts = header[4] % UInt64
+        agava_ts = agava_ts << 32 + header[5] % UInt64
+    else
+        @warn "Could not read agava time stamp"
+        return 0
+    end
+    csize = filesize(files_caen[1])
 
     i_file = 0
-    for filename in files
-        time_start = Dates.Time(Dates.now())
+    t_ref = Float64[]
+    block_caen = true
+    block_dia = true
+    n_print = 10_000_000
+    time_start = Dates.Time(Dates.now())
+    for filename in files_caen
         i_file += 1
-        fin = open(filename, "r")
-        name = split(filename, ['/'])[end]
-        println("\nProcessing file $name  $i_file / $(length(files))")
+        if i_file > n_files
+            break
+        end
 
-        if i_file == 1
+        fin = open(filename, "r")
+
+        if parse(Int64, split(filename, ['/', '_', '.'])[end-1]) == 0
             header = zeros(UInt32, 12)
             read!(fin, header)
         end
 
-        t_start = Float64[]
         n_hits = 0
         while !eof(fin) 
             hits = RawHit[]
@@ -408,93 +451,184 @@ function test_walk(dir_name, outname)
             end
             for hit in hits
                 n_hits += 1
-                if hit.board != ref_board || hit.ch != ref_ch
+                if n_hits % n_print == 0
+                    if isopen(fin)
+                        cpos = position(fin) / csize
+                    else
+                        cpos = 1.0
+                    end
+                    block_caen, block_dia = progress_dots(
+                                                  "    \u25E6 ref. time  : ",
+                                                    time_start, cpos, 0.0,
+                                                    i_file, block_caen, n_files,
+                                                    0, block_dia, 0)
+                end
+                if hit.board * 16 + hit.ch + 1 != ref_label
                     continue
                 end
-                t = hit.ts * 4 + hit.tf / 256  # tf * 4 / 1024
-                if hit.E > Estartmin
-                    push!(t_start, t)
-                end
-                #=
-                ige = hit.board * 8 + round(Int, hit.ch / 2, RoundDown) + 1
-                if ige == ref_ge
-                    E = lin(hit.E, cal_ge[:, ige])
-                    t = hit.ts * 4 + hit.tf / 256 
-                    #if 500 < E
-                    if abs(E - 1332.5) < dE
-                        push!(t_start, t)
-                    end
-                end
-                =#
-            end
-        end
-        seek(fin, 0)
-        if i_file == 1
-            read!(fin, header)
-        end
-        sort!(t_start)
-        n_start = size(t_start)[1]
-        @show n_start
-        @show n_hits
-
-        if size(t_start)[1] == 0
-            continue
-        end
-
-        i_start = 1
-        i_hit = 0
-        while !eof(fin) 
-            hits = RawHit[]
-            try
-                hits = read_aggregate(fin, config)
-            catch err
-                break
-            end
-            for hit in hits
-                i_hit += 1
                 t = hit.ts * 4 + hit.tf / 256 
-                if Emin < hit.E < Emax
-                    if t > t_start[i_start]
-                        while i_start < n_start
-                            i_start += 1
-                            if t <= t_start[i_start]
-                                break
-                            end
-                        end
-                    elseif t < t_start[i_start]
-                        while i_start > 1
-                            i_start -= 1
-                            if t > t_start[i_start]
-                                i_start += 1
-                                break
-                            end
-                        end
-                    end
-                    if i_start == 1
-                        continue
-                    end
-                    dti = ifelse(
-                    abs(t_start[i_start] - t) < abs(t_start[i_start-1] - t), 
-                        t - t_start[i_start], t - t_start[i_start-1])
-                    if dt_min < dti < dt_max
-                        it = round(Int, (dti - dt_min) / dt) + 1 
-                        iE = round(Int, hit.E / dE)
-                        ich = hit.board * 16 + hit.ch + 1
-                        walk[ich, iE, it] += 1
+                if hit.E > Estartmin
+                    pid = (Float64(hit.qshort) + randn()) / Float64(hit.E)
+                    if hit.E > pid_table[1] && (0.75 <= pid < 0.95)
+                        #Good gamma
+                        push!(t_ref, t)
                     end
                 end
-                if i_hit % 100000 == 0
-                    dtime = (Dates.Time(Dates.now()) - time_start)
-                    @printf("\r %8.2f%% %8.1f s ", i_hit / n_hits * 100,
-                            dtime.value * 1e-9)
+            end
+        end
+        close(fin)
+    end
+    sort!(t_ref)
+    i_ref = 1
+    n_ref = length(t_ref)
+
+    progress_dots("    \u25E6 ref. time  : ", time_start, 1.0, 0.0,
+                    n_files, block_caen, n_files,
+                    0, block_dia, 0)
+    println()
+    
+    caen_good = true
+    dia_good = true
+    t_caen = 0
+    t_dia = 0
+    i_dia = 1
+    if length(files_dia) > 0
+        dfin = open(files_dia[1], "r")
+        dsize = filesize(files_dia[1])
+    else
+        dfin = IOBuffer()
+        close(dfin)
+        dsize = 0
+        dia_good = false
+    end
+
+    n_hits = 0
+
+    while caen_good || dia_good
+
+        hits = RawHit[]
+        if (caen_good && t_dia >= t_caen) || !(dia_good)
+            try
+                hits = read_aggregate(cfin, config)
+            catch err
+                throw(err)
+            end
+            if size(hits)[1] > 0
+                t_caen = hits[end].ts
+            end
+        elseif (dia_good && t_dia < t_caen) || !(caen_good)
+            try
+                hits = read_diahit(dfin, agava_ts, 100)
+            catch err
+                if !eof(dfin)
+                    throw(err)
                 end
+            end
+            if size(hits)[1] > 0
+                t_dia = hits[end].ts
+            end
+        end
+
+        for hit in hits
+            n_hits += 1
+
+            t = hit.ts * 4
+            E = Float64(hit.E)
+            loc = hit.board * 16 + hit.ch + 1
+            pid = 0.0
+            if type_table[loc] == 1
+                ige = round(Int64, loc / 2, RoundDown) + 1
+                E = quad(quadquad(
+                    hit.E, cal_table[:, loc]) + (rand()-0.5), 
+                            fcal_table[:, ige]) * dE
+            elseif type_table[loc] == 3
+                pid = (Float64(hit.qshort) + randn()) / E
+                E = pid * 10000
+            elseif type_table[loc] == 4
+                T = Float64(hit.qshort)
+                pid = (T / E 
+                    - cal_table[1, loc] / E^2 
+                    - cal_table[2, loc] + 0.5)
+                E = pid * 10000
+            else
+                continue
+            end
+            if 1 < E < Emax
+                if t > t_ref[i_ref]
+                    while i_ref < n_ref
+                        i_ref += 1
+                        if t <= t_ref[i_ref]
+                            break
+                        end
+                    end
+                elseif t < t_ref[i_ref]
+                    while i_ref > 1
+                        i_ref -= 1
+                        if t > t_ref[i_ref]
+                            i_ref += 1
+                            break
+                        end
+                    end
+                end
+                if i_ref == 1
+                    continue
+                end
+                dti = ifelse(
+                abs(t_ref[i_ref] - t) < abs(t_ref[i_ref-1] - t), 
+                    t - t_ref[i_ref], t - t_ref[i_ref-1])
+                # Only previous t_ref
+                #dti = t - t_ref[i_ref-1]
+                if dt_min < dti < dt_max 
+                    it = round(Int, (dti - dt_min) / dt, RoundUp)
+                    iE = round(Int, E / dE, RoundUp)
+                    walk[loc, iE, it] += 1
+                end
+            end
+
+            if n_hits % n_print == 0
+                if isopen(cfin)
+                    cpos = position(cfin) / csize
+                else
+                    cpos = 1.0
+                end
+                if isopen(dfin)
+                    dpos = position(dfin) / dsize
+                else
+                    dpos = 1.0
+                end
+                block_caen, block_dia = progress_dots(
+                                                "    \u25E6 prescan    : ",
+                                                time_start, cpos, dpos,
+                                                i_caen, block_caen, n_files,
+                                                i_dia, block_dia, n_files)
+            end
+
+        end
+
+        if eof(cfin)
+            close(cfin)
+            if i_caen < length(files_caen) && i_caen < n_files
+                i_caen += 1
+                cfin = open(files_caen[i_caen], "r")
+                csize = filesize(files_caen[i_caen])
+            else
+                caen_good = false
+            end
+        end
+        if eof(dfin)
+            close(dfin)
+            if i_dia < length(files_dia) && i_dia < n_files
+                i_dia += 1
+                dfin = open(files_dia[i_dia], "r")
+                dsize = filesize(files_dia[i_dia])
+            else
+                dia_good = false
             end
         end
     end
-    println()
-    fout = open(outname, "w")
-    write(fout, walk)
-    close(fout)
+    progress_dots("    \u25E6 prescan    : ", time_start, 1.0, 1.0,
+                    i_caen, block_caen, n_files,
+                    i_dia, block_dia, n_files)
     walk
 end
 
@@ -640,237 +774,6 @@ function find_shift_table(config_file, dir_name; ref_label=34,
     end
     println()
     shift
-end
-
-"""
-    pid - particle id
-    0 - gamma
-    1 - neutron
-    2 - proton
-    3 - alpha
-"""
-struct CalHit
-    loc::UInt8
-    E::Float64
-    t::Float64
-    pid::UInt8
-end
-
-
-function Base.zero(::Type{CalHit})
-    return CalHit(zero(UInt8), 0.0, 0.0, zero(UInt8))
-end
-
-function test_scan(dir_name, config_file::String)
-    config = TOML.parsefile(config_file)
-    test_scan(dir_name, config)
-end
-
-"""
-
-Test scan (caen only): E_loc and gamma_gamma 
-"""
-function test_scan(dir_name, config::Dict)
-    files = readdir(dir_name, join=true)
-    filter!(x->endswith(x, ".caendat"), files)
-
-    last_label = 0
-    for loc in keys(config["label"])
-        if parse(Int64, loc) > last_label && config["label"]["$loc"]["type"] == "NEDA"
-            last_label = parse(Int64, loc)
-        end
-    end
-
-    ge_locs = [x for x in 1:2:32]
-    cal_table = zeros(7, 16)
-    fcal_table = zeros(3, 16)
-    shift_table = zeros(last_label)
-    for label in 1:last_label
-        if label in ge_locs
-            ige = round(Int64, label / 2, RoundDown) + 1
-            cal_table[:, ige] = config["label"]["$label"]["cal"]
-            if haskey(config["label"]["$label"], "fcal")
-                fcal_table[:, ige] = config["label"]["$label"]["fcal"]
-            else
-                fcal_table[:, ige] = [0.0, 1.0, 0.0]
-            end
-        end
-        shift_table[label] = config["label"]["$label"]["dt"]
-    end
-
-    period = config["spectra"]["beam_period"]
-    t_min = -1000.0
-    dt = 1.0
-    t_max = 1000.0
-    #t_loc = zeros(Int64, last_label, length(t_min:dt:t_max))
-
-    E_min = 1
-    E_max = 4096
-    E_loc = zeros(Int64, last_label, length(E_min:E_max))
-
-    gg = zeros(Int64, E_max, E_max)
-
-    chunk_size = 10_000
-    i_file = 0
-    for filename in files
-        time_start = Dates.Time(Dates.now())
-        i_file += 1
-        fin = open(filename, "r")
-        name = split(filename, ['/'])[end]
-        println("\nProcessing file $name  $i_file / $(length(files))")
-
-        if i_file == 1
-            header = zeros(UInt32, 12)
-            read!(fin, header)
-        end
-
-        i_hit = 0
-        i_chunk = 0
-        chunk = zeros(CalHit, chunk_size)
-        while !eof(fin) 
-            hits = RawHit[]
-            try
-                hits = read_aggregate(fin, config)
-            catch err
-                break
-            end
-            for hit in hits
-                i_hit += 1
-                loc = hit.board * 16 + hit.ch + 1
-                if loc > last_label
-                    continue
-                end
-                i_chunk += 1
-                t = hit.ts * 4 + hit.tf / 256 - shift_table[loc]
-                E = hit.E
-                if loc in ge_locs
-                    ige = round(Int64, loc / 2, RoundDown) + 1
-                    E = quad(quadquad(
-                        hit.E, cal_table[:, ige]) + (rand()-0.5), 
-                             fcal_table[:, ige])
-                else
-                    E = E / 10
-                end
-                if E_min < E <= E_max
-                    iE = round(Int64, E)
-                    E_loc[loc, iE] += 1
-                end
-                if i_chunk <= chunk_size
-                    chunk[i_chunk] = CalHit(UInt8(loc), E, t, zero(UInt8))
-                else
-                    sort!(chunk, by=x->x.t)
-
-                    event = [1]
-                    for i in 2:chunk_size
-                        if chunk[i].t - chunk[event[1]].t < period
-                            if chunk[i].loc in ge_locs
-                                push!(event, i)
-                            end
-                        else
-                            ev_size = length(event)
-                            for j in 1:ev_size
-                                if !(chunk[event[j]].loc in ge_locs)
-                                    continue
-                                end
-                                    if E_min < chunk[event[j]].E <= E_max
-                                        for k in j+1:ev_size
-                                            if !(chunk[event[k]].loc in ge_locs)
-                                                continue
-                                            end
-                                            if E_min < chunk[event[k]].E <= E_max
-                                                iE1 = round(Int64, chunk[event[j]].E)
-                                                iE2 = round(Int64, chunk[event[k]].E)
-                                                gg[iE1, iE2] += 1
-                                                gg[iE2, iE1] += 1
-                                            end
-                                        end
-                                    end
-                            end
-                            event = [i]
-                        end
-                    end
-
-                    ## Testing distance between two consecutive hits
-                    #=
-                    for j in 2:chunk_size-1
-                        if E_min < chunk[j].E <= E_max
-                            iE = round(Int64, chunk[j].E)
-                            E_loc[chunk[j].loc, iE] += 1
-                        end
-
-                        t_near = ifelse(
-                        chunk[j].t - chunk[j-1].t < chunk[j+1].t - chunk[j].t,
-                        chunk[j].t - chunk[j-1].t, 
-                        chunk[j].t - chunk[j+1].t)
-                        if t_min < t_near < t_max
-                            it = round(Int64, (t_near - t_min) / dt, RoundUp)
-                            t_loc[chunk[j].loc, it] += 1
-                        end
-
-                        last = chunk[end]
-                        chunk[1] = last
-                        chunk[2] = CalHit(UInt8(loc), E, t)
-                        i_chunk = 2
-                    end
-                    =#
-                    last = chunk[end]
-                    chunk[1] = last
-                    chunk[2] = CalHit(UInt8(loc), E, t, zero(UInt8))
-                    i_chunk = 2
-                    dtime = (Dates.Time(Dates.now()) - time_start)
-                    @printf("\r %8.2e %8.1f s ", i_hit, dtime.value * 1e-9)
-                end
-            end
-        end
-        #=
-        for j in 2:i_chunk-1
-            if E_min < chunk[j].E <= E_max
-                iE = round(Int64, chunk[j].E)
-                E_loc[chunk[j].loc, iE] += 1
-            end
-
-            t_near = ifelse(
-            chunk[j].t - chunk[j-1].t < chunk[j+1].t - chunk[j].t,
-            chunk[j].t - chunk[j-1].t, 
-            chunk[j].t - chunk[j+1].t)
-            if t_min < t_near < t_max
-                it = round(Int64, (t_near - t_min) / dt, RoundUp)
-                t_loc[chunk[j].loc, it] += 1
-            end
-        end
-        =#
-        event = [1]
-        for i in 2:i_chunk
-            if chunk[i].t - chunk[event[1]].t < period
-                if chunk[i].loc in ge_locs
-                    push!(event, i)
-                end
-            else
-                ev_size = length(event)
-                for j in 1:ev_size
-                    if !(chunk[event[j]].loc in ge_locs)
-                        continue
-                    end
-                    if E_min < chunk[event[j]].E <= E_max
-                        for k in j+1:ev_size
-                            if !(chunk[event[k]].loc in ge_locs)
-                                continue
-                            end
-                            if E_min < chunk[event[k]].E <= E_max
-                                iE1 = round(Int64, chunk[event[j]].E)
-                                iE2 = round(Int64, chunk[event[k]].E)
-                                gg[iE1, iE2] += 1
-                                gg[iE2, iE1] += 1
-                            end
-                        end
-                    end
-                end
-                event = [i]
-            end
-        end
-    end
-    println()
-    E_loc, gg
 end
 
 
@@ -1076,4 +979,76 @@ function dia_banana_fit(dia_dir_name, config::Dict;
     end
     new_config
 
+end
+
+"""
+    Δt between "trigger" signals
+
+"""
+function dt_trig(data_dir, configfile; ref_label=93, n_files=1, t_max=1_000_000)
+
+    dt = zeros(Int64, length(0:1:t_max))
+
+    files_caen = readdir(data_dir, join=true)
+    filter!(x->endswith(x, ".caendat"), files_caen)
+    run_number = parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-2])
+    config = TOML.parsefile(configfile)
+
+    i_file = 0
+    block_caen = true
+    block_dia = true
+    n_print = 10_000_000
+    time_start = Dates.Time(Dates.now())
+    t_last = 0.0
+    for filename in files_caen
+        i_file += 1
+        if i_file > n_files
+            break
+        end
+
+        fin = open(filename, "r")
+        cpos = 0.0
+        csize = filesize(filename)
+
+        if parse(Int64, split(filename, ['/', '_', '.'])[end-1]) == 0
+            header = zeros(UInt32, 12)
+            read!(fin, header)
+        end
+
+        n_hits = 0
+        while !eof(fin) 
+            hits = RawHit[]
+            try
+                hits = read_aggregate(fin, config)
+            catch err
+                break
+            end
+            for hit in hits
+                n_hits += 1
+                if n_hits % n_print == 0
+                    if isopen(fin)
+                        cpos = position(fin) / csize
+                    else
+                        cpos = 1.0
+                    end
+                    block_caen, block_dia = progress_dots(
+                                                  "    \u25E6 ref. time  : ",
+                                                    time_start, cpos, 0.0,
+                                                    i_file, block_caen, n_files,
+                                                    0, block_dia, 0)
+                end
+                if hit.board * 16 + hit.ch + 1 != ref_label
+                    continue
+                end
+                t = hit.ts * 4 + hit.tf / 256 
+                it = round(Int64, t - t_last, RoundDown) + 1
+                t_last = t
+                if 1 <= it <= t_max
+                    dt[it] += 1
+                end
+            end
+        end
+        close(fin)
+    end
+    dt
 end

@@ -1,4 +1,8 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 HIL117 = "28c194ab-b10c-4935-839c-027c944ad6db"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 MTools = "81263d5a-55d9-4353-ac59-8b9e38c9ddc0"

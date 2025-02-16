@@ -7,6 +7,7 @@ using Printf
 using Dates
 using StatsBase
 using HDF5
+using Infiltrator
 
 include("caendat.jl")
 
@@ -21,6 +22,6 @@ include("edf.jl")
 include("scan.jl")
 export scan_run
 
-#include("dev.jl")
+include("dev.jl")
 
 end

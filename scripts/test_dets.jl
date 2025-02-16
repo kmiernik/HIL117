@@ -1,3 +1,6 @@
+using HIL117
+using GLMakie
+
 """
     Calibrate using Eu-152 data (energy calibration)
 

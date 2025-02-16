@@ -173,7 +173,7 @@ end
     * Ge-Ge all/protons/alphas/no_alphas
     * dia-pid
     * neda-pid
-
+    * multiplicity
 """
 function prepare_spectra_file(config, spectranameout, pars)
     fout = h5open(spectranameout, "w")
@@ -309,6 +309,17 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = pars.dpid
     HDF5.attributes(dset)["ymax"] = pars.pidmax
 
+    data = zeros(UInt32, 
+                 size(0:pars.Mmax)[1]-1,
+                 size(0:pars.Mmax)[1]-1)
+    write(fout, "MP", data)
+    dset = fout["MP"]
+    HDF5.attributes(dset)["xmin"] = 0
+    HDF5.attributes(dset)["dx"] = 1
+    HDF5.attributes(dset)["xmax"] = pars.Mmax
+    HDF5.attributes(dset)["ymin"] = 0
+    HDF5.attributes(dset)["dy"] = 1
+    HDF5.attributes(dset)["ymax"] = pars.Mmax
 
     close(fout)
     println("    \u25E6 spectra file ", spectranameout, " created")
@@ -533,6 +544,16 @@ function event_builder!(chunk, last_event, spectra, specpars, t_event;
                     end
                 end
             end
+            for (itype, m) in enumerate([Mraw, M, ges, gammas, neutrons,
+                                         protons, alphas])
+                iM = ifelse(m < specpars.Mmax-2, m+1, specpars.Mmax-1)
+                spectra.MP[iM, itype] += 1
+            end
+            if ges < 1
+                event = [i]
+                continue
+            end
+
             for j in 1:M
                 jloc = hits[event[j]].loc
                 if type_table[jloc] != 1
@@ -692,92 +713,15 @@ function progress_dots(prefix, time_start, cpos, dpos,
     return block_caen, block_dia
 end
 
-
-function scan_run(data_dir, configfile::String, prefix; args...)
-    config = TOML.parsefile(configfile)
-    scan_run(data_dir, config, prefix; args...)
-end
-
-
 """
-    scan_run(data_dir, config::Dict, prefix; 
-             chunk_size=10_000, dia_buf=100, n_prescan)
+    config_to_tables(config)
 
-    Scan run pointed by data_dir (notice that both caendat and diamant files
-    must be present).
-    First a prescan is performed on n_prescan.
-    Both caen and dia files are read simultanuesly (keeping hits time about
-    the same). Dia is read in dia_buf bunches.
-    Most of the parameters are configured in the config TOML file.
-    chunk_size is number of hits to be broken into events (of length equal to
-    beam period).
+    Convert config to location based fast access tables 
 
-    Returns 0 if no errors, 1 in case of error (along with warn message)
+    returns:
+    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table
 """
-function scan_run(data_dir, config::Dict, prefix; 
-                    chunk_size=10_000, dia_buf=100, n_prescan=2)
-
-    time_start = Dates.Time(Dates.now())
-    files_caen = readdir(data_dir, join=true)
-    filter!(x->endswith(x, ".caendat"), files_caen)
-    run_number = parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-2])
-
-    files_dia = readdir(data_dir, join=true)
-    filter!(x->split(x, '.')[2] == "dat", files_dia)
-    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
-
-    println("\u25CD Run $run_number ")
-    println("\u25CD Prescanning $n_prescan file(s)")
-    E_loc, t_loc = prescan(data_dir, config; n_files=n_prescan)
-    println()
-    if n_prescan > 0
-        print("    \u25E6 Calculating shifts, fine calibration, and period (")
-        config = find_shifts(t_loc, config)
-        config = fine_cal(E_loc, config)
-        config = find_period(t_loc, config)
-        @printf("%.3f ns)\n", config["spectra"]["beam_period"])
-    end
-    nicetoml(config, @sprintf("config_%03d.toml", run_number))
-
-    cfin = open(files_caen[1], "r")
-    csize = filesize(files_caen[1])
-    i_caen = 1
-    if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
-        header = zeros(UInt32, 12)
-        read!(cfin, header)
-        agava_ts = header[4] % UInt64
-        agava_ts = agava_ts << 32 + header[5] % UInt64
-    else
-        @warn "Could not read agava time stamp"
-        return 1
-    end
-
-    println("\u25CD Scanning run")
-    beam_period = config["spectra"]["beam_period"]
-    specpars = SpectraPars(config)
-    spectranameout = prefix * "_s.h5"
-    if !isfile(spectranameout)
-        prepare_spectra_file(config, spectranameout, specpars)
-    end
-    spectra = prepare_spectra(spectranameout)
-
-    i_dia = 1
-    dfin = open(files_dia[1], "r")
-    dsize = filesize(files_dia[1])
-
-    caen_good = true
-    dia_good = true
-    t_caen = 0
-    t_dia = 0
-
-    last_label = 0
-    for label in keys(config["label"])
-        if (parse(Int64, label) > last_label 
-            && config["label"][label]["valid"])
-            last_label = parse(Int64, label)
-        end
-    end
-    
+function config_to_tables(config, last_label)
     type_table = zeros(UInt8, last_label)
     valid_table = zeros(Bool, last_label)
     cal_table = zeros(Float64, 7, last_label)
@@ -822,6 +766,102 @@ function scan_run(data_dir, config::Dict, prefix;
         end
     end
 
+    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table
+end
+
+
+function scan_run(data_dir, configfile::String, prefix; args...)
+    config = TOML.parsefile(configfile)
+    scan_run(data_dir, config, prefix; args...)
+end
+
+
+"""
+    scan_run(data_dir, config::Dict, prefix; 
+             chunk_size=10_000, dia_buf=100, n_prescan=2)
+
+    Scan run pointed by data_dir (notice that both caendat and diamant files
+    must be present).
+    First a prescan is performed on n_prescan.
+    Both caen and dia files are read simultanuesly (keeping hits time about
+    the same). Dia is read in dia_buf bunches.
+    Most of the parameters are configured in the config TOML file.
+    chunk_size is number of hits to be broken into events (of length equal to
+    beam period).
+
+    Returns 0 if no errors, 1 in case of error (along with warn message)
+"""
+function scan_run(data_dir, config::Dict, prefix;
+                    chunk_size=10_000, dia_buf=100, n_prescan=2, edfmode=false)
+
+    time_start = Dates.Time(Dates.now())
+    files_caen = readdir(data_dir, join=true)
+    filter!(x->endswith(x, ".caendat"), files_caen)
+    run_number = parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-2])
+
+    files_dia = readdir(data_dir, join=true)
+    filter!(x->split(x, '.')[2] == "dat", files_dia)
+    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+
+    println("\u25CD Run $run_number ")
+    println("\u25CD Prescanning $n_prescan file(s)")
+    E_loc, t_loc = prescan(data_dir, config; n_files=n_prescan)
+    println()
+    if n_prescan > 0
+        print("    \u25E6 Calculating shifts, fine calibration, and period (")
+        config = find_shifts(t_loc, config)
+        config = fine_cal(E_loc, config)
+        config = find_period(t_loc, config)
+        @printf("%.3f ns)\n", config["spectra"]["beam_period"])
+    end
+    nicetoml(config, @sprintf("config_%03d.toml", run_number))
+
+    cfin = open(files_caen[1], "r")
+    csize = filesize(files_caen[1])
+    i_caen = 1
+    if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
+        header = zeros(UInt32, 12)
+        read!(cfin, header)
+        agava_ts = header[4] % UInt64
+        agava_ts = agava_ts << 32 + header[5] % UInt64
+    else
+        @warn "Could not read agava time stamp"
+        return 1
+    end
+
+    println("\u25CD Scanning run")
+    beam_period = config["spectra"]["beam_period"]
+    specpars = SpectraPars(config)
+    if edfmode
+        edffile = open(prefix * ".edf", "w")
+        println("    \u25E6 edf file ", prefix * ".edf", " created")
+    else
+        spectranameout = prefix * "_s.h5"
+        if !isfile(spectranameout)
+            prepare_spectra_file(config, spectranameout, specpars)
+        end
+        spectra = prepare_spectra(spectranameout)
+    end
+
+    i_dia = 1
+    dfin = open(files_dia[1], "r")
+    dsize = filesize(files_dia[1])
+
+    caen_good = true
+    dia_good = true
+    t_caen = 0
+    t_dia = 0
+
+    last_label = 0
+    for label in keys(config["label"])
+        if (parse(Int64, label) > last_label 
+            && config["label"][label]["valid"])
+            last_label = parse(Int64, label)
+        end
+    end
+    
+    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table = config_to_tables(config, last_label)
+
     distance_table = distance(config, valid_table, last_label)
 
     chunk = zeros(RawHit, chunk_size)
@@ -861,15 +901,28 @@ function scan_run(data_dir, config::Dict, prefix;
             i_chunk += 1
 
             if i_chunk > chunk_size
-                last_event = event_builder!(chunk, last_event, spectra, 
-                                            specpars, beam_period;
-                                        valid_table=valid_table, 
-                                        cal_table=cal_table,
-                                        fcal_table=fcal_table, 
-                                        shift_table=shift_table,
-                                        type_table=type_table,
-                                        distance_table=distance_table,
-                                        pid_table=pid_table)
+                if edfmode
+                    last_event = event_builder!(chunk, last_event, edffile,
+                                                specpars, beam_period;
+                                                valid_table=valid_table, 
+                                                cal_table=cal_table,
+                                                fcal_table=fcal_table, 
+                                                shift_table=shift_table,
+                                                type_table=type_table,
+                                                distance_table=distance_table,
+                                                pid_table=pid_table)
+
+                else
+                    last_event = event_builder!(chunk, last_event, spectra, 
+                                                specpars, beam_period;
+                                                valid_table=valid_table, 
+                                                cal_table=cal_table,
+                                                fcal_table=fcal_table, 
+                                                shift_table=shift_table,
+                                                type_table=type_table,
+                                                distance_table=distance_table,
+                                                pid_table=pid_table)
+                end
                 i_chunk = 0
                     
                 chunk_number += 1
@@ -921,21 +974,24 @@ function scan_run(data_dir, config::Dict, prefix;
                     i_caen, block_caen, length(files_caen),
                     i_dia, block_dia, length(files_dia))
     println()
-    println("\u25CD Updating spectra")
-
-    specfile = h5open(spectranameout, "r+")
-    for field in keys(spectra)
-        key = String(field)
-        @printf("\r    \u25E6 %20s ", key)
-        dset = specfile[key]
-        data = read(dset)
-        data[:, :] .+= spectra[field][:, :]
-        dset[:, :] = data[:, :]
-        @printf("+%20d", sum(spectra[field]))
-        GC.gc()
+    if edfmode
+        close(edffile)
+    else
+        println("\u25CD Updating spectra")
+        specfile = h5open(spectranameout, "r+")
+        for field in keys(spectra)
+            key = String(field)
+            @printf("\r    \u25E6 %20s ", key)
+            dset = specfile[key]
+            data = read(dset)
+            data[:, :] .+= spectra[field][:, :]
+            dset[:, :] = data[:, :]
+            @printf("+%20d", sum(spectra[field]))
+            GC.gc()
+        end
+        println()
+        close(specfile)
     end
-    println()
-    close(specfile)
 
     return 0
 end

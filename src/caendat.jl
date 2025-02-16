@@ -84,7 +84,7 @@ function read_aggregate(fin, config)
     signature = ((board_header[1] & 0xA0000000) >> 28) % UInt8
     if signature !== UInt8(10)
         current_pos = position(fin)
-        #@warn "Wrong board aggregate signature $signature at $current_pos"
+        @warn "Wrong board aggregate signature $signature at $current_pos"
         # Move back file pointer, skip just one byte (header is 16 long)
         # perhaps good board header will be found in the next call
         skip(fin, -15)
@@ -185,8 +185,10 @@ function read_aggregate(fin, config)
                     #totaltrigcounter = (extras2 & 0x0000ffff) % UInt16
                 elseif info.ex == 0x5
                     tstamp = (((extras2 & 0x00000000FFFF0000) << 15) | trigtime)
-                    #evbefore = (extras2 & 0x0000ffff)
-                    #evafter = (extras2 & 0xffff0000)
+                    evbefore = Float64(extras & 0x0000ffff)
+                    evafter = Float64(extras & 0xffff0000)
+                    tfine = round(UInt16, 
+                                  (8192 - evbefore) / (evafter - evbefore) * 4)
                 end
                 qshort = UInt16(0)
             elseif Int64(boardid) in psd_boards
@@ -215,14 +217,16 @@ function read_aggregate(fin, config)
                     #totaltrigcounter = (extras & 0x0000ffff) % UInt16
                 elseif info.ex == 0x5
                     tstamp = UInt64(trigtime)
-                    #evbefore = (extras & 0x0000ffff)
-                    #evafter = (extras & 0xffff0000)
+                    evbefore = Float64(extras & 0x0000ffff)
+                    evafter = Float64(extras & 0xffff0000)
+                    tfine = round(UInt16, 
+                                  (8192 - evbefore) / (evafter - evbefore) * 4)
                 end
 
                 energy = qlong
             else
                 current_pos = position(fin)
-                #@warn "Unknown board $boardid at $current_pos"
+                @warn "Unknown board $boardid at $current_pos"
                 return hits
             end
             pos += 2
