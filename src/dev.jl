@@ -400,7 +400,7 @@ function test_walk(data_dir, config::Dict;
     end
 
     if n_files > length(files_caen) && n_files > length(files_dia)
-        n_new = maximum(length(files_caen), length(files_dia))
+        n_new = maximum([length(files_caen), length(files_dia)])
         @warn "There are no both $n_files caendat and diamant file(s) to be prescanned, using $(n_new) file(s) instead"
         n_files = n_new
     elseif n_files > length(files_dia)
@@ -500,6 +500,7 @@ function test_walk(data_dir, config::Dict;
         close(dfin)
         dsize = 0
         dia_good = false
+        i_dia = n_files 
     end
 
     n_hits = 0
@@ -532,7 +533,7 @@ function test_walk(data_dir, config::Dict;
         for hit in hits
             n_hits += 1
 
-            t = hit.ts * 4
+            t = hit.ts * 4 + hit.tf / 256 
             E = Float64(hit.E)
             loc = hit.board * 16 + hit.ch + 1
             pid = 0.0
@@ -980,6 +981,37 @@ function dia_banana_fit(dia_dir_name, config::Dict;
     new_config
 
 end
+
+
+function fit_ban(dia_spec, c_lim, E_lim, loc)        
+    Ai = Float64[]
+    Pi = Float64[]
+    Ei = Float64[]
+    fi = 1
+    t = 0.00:0.01:1.27
+    b(x, p) = @. p[1] / x^2 + p[2]
+    for ie in 1:size(dia_spec)[1]
+        if maximum(dia_spec[ie, :]) > c_lim && (100 * (ie - 1) < E_lim)
+            tg = t[argmax(dia_spec[ie, :])]
+            guess = [sum(dia_spec[ie, :]) * 0.015, tg, 0.04, 
+                         sum(dia_spec[ie, :]) * 0.003, tg+0.12, 0.04]
+            gf = curve_fit(ngauss, t, dia_spec[ie, :], guess)
+            push!(Ei, 100 * ie + 50)
+            if gf.param[2] < gf.param[5]
+                push!(Ai, gf.param[2])
+                push!(Pi, gf.param[5])
+            else
+                push!(Ai, gf.param[5])
+                push!(Pi, gf.param[2])
+            end
+        else
+            continue
+        end
+    end
+    bf = curve_fit(b, Ei, Ai, [30000.0, 0.6])
+    bf.param
+end
+
 
 """
     Δt between "trigger" signals

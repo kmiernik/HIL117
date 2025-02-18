@@ -825,7 +825,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [35175.46107301359, 0.5805009816616173]
+	cal = [45755.86285284837, 0.5732699240586732]
 	valid = true
 	comment = " "
 
@@ -834,7 +834,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [37053.96102036582, 0.5952593091668368]
+	cal = [53540.4255365353, 0.5857080335691983]
 	valid = true
 	comment = " "
 
@@ -843,7 +843,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [38668.70233985346, 0.5995638491064301]
+	cal = [47360.27391950573, 0.5919861330793544]
 	valid = true
 	comment = " "
 
@@ -852,7 +852,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [44793.19563392227, 0.5740946397871257]
+	cal = [56064.703308437616, 0.5662294101101376]
 	valid = true
 	comment = " "
 
@@ -861,7 +861,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [36955.927435824946, 0.5892978445582031]
+	cal = [46234.25007276567, 0.5821081067754399]
 	valid = true
 	comment = " "
 
@@ -870,7 +870,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [59658.0225387031, 0.5912737250542797]
+	cal = [70270.4598031226, 0.5860661798106627]
 	valid = true
 	comment = " "
 
@@ -879,7 +879,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [36762.11513182622, 0.6023664395675731]
+	cal = [46314.53433393846, 0.5930074809178528]
 	valid = true
 	comment = " "
 
@@ -888,7 +888,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [42645.09911069297, 0.5973067497631412]
+	cal = [62092.29875104127, 0.5864172359485677]
 	valid = true
 	comment = " "
 
@@ -897,7 +897,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [48919.86986545737, 0.5756962019938352]
+	cal = [58676.42410728866, 0.5699807920866389]
 	valid = true
 	comment = " "
 
@@ -906,7 +906,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [41652.47841543026, 0.5657079389362418]
+	cal = [51328.83540531011, 0.5587818724649223]
 	valid = true
 	comment = " "
 
@@ -915,7 +915,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [40808.38373894278, 0.5880874765859074]
+	cal = [50708.41784562175, 0.5805212726902121]
 	valid = true
 	comment = " "
 
@@ -924,7 +924,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [39442.52740135208, 0.5773650633468765]
+	cal = [52486.242995471555, 0.568695831313989]
 	valid = true
 	comment = " "
 
@@ -933,7 +933,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [40192.234117020365, 0.5827799146020173]
+	cal = [51668.94850953791, 0.5749363891942082]
 	valid = true
 	comment = " "
 
@@ -942,7 +942,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [30263.393264130063, 0.5735590935099032]
+	cal = [40963.775326791285, 0.5645714941794282]
 	valid = true
 	comment = " "
 
@@ -951,7 +951,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [34222.39037942484, 0.5980580806879204]
+	cal = [42653.79392975229, 0.5890091778906991]
 	valid = true
 	comment = " "
 
@@ -960,7 +960,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [41578.213191296825, 0.5926921712559026]
+	cal = [54816.73093490118, 0.583722194146109]
 	valid = true
 	comment = " "
 
@@ -969,7 +969,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [54869.861612345856, 0.6428706146167187]
+	cal = [70712.87863666797, 0.6364563198972707]
 	valid = true
 	comment = " "
 
@@ -978,7 +978,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [52103.32817395404, 0.5895104799167292]
+	cal = [65543.25693296426, 0.583489496786275]
 	valid = true
 	comment = " "
 
@@ -987,7 +987,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [40735.43036216233, 0.5914573483311083]
+	cal = [50742.780287406094, 0.5842271185089656]
 	valid = true
 	comment = " "
 
@@ -996,7 +996,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [46856.508832309075, 0.582262080232476]
+	cal = [60270.300609891936, 0.5753828567090976]
 	valid = true
 	comment = " "
 
@@ -1005,7 +1005,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [30245.31176970812, 0.5992928281101932]
+	cal = [40412.42149738309, 0.5919665811135129]
 	valid = true
 	comment = " "
 
@@ -1014,7 +1014,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [35170.510822774406, 0.5927636166711798]
+	cal = [49332.52119216394, 0.5854170967187526]
 	valid = true
 	comment = " "
 
@@ -1023,7 +1023,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [26053.381486279053, 0.5951076230382125]
+	cal = [33762.291626755774, 0.587241432729835]
 	valid = true
 	comment = " "
 
@@ -1032,7 +1032,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [24805.770088383833, 0.5941938106475348]
+	cal = [59551.364866070486, 0.5782617857608533]
 	valid = true
 	comment = " "
 
@@ -1041,7 +1041,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [32432.56521637196, 0.587559572862565]
+	cal = [115498.9844929326, 0.5240149002055823]
 	valid = true
 	comment = " "
 
@@ -1050,7 +1050,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [39201.376729572934, 0.589530766151039]
+	cal = [49425.5729205918, 0.5824476833313476]
 	valid = true
 	comment = " "
 
@@ -1059,7 +1059,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [100000.0, 0.6]
+	cal = [30000.0, 0.6]
 	valid = true
 	comment = " "
 
@@ -1068,7 +1068,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [43174.33018120458, 0.5851018519053756]
+	cal = [65829.40106438758, 0.5743857603340512]
 	valid = true
 	comment = " "
 
@@ -1077,7 +1077,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [38024.28613428128, 0.5900254839549526]
+	cal = [47479.53652154063, 0.581005548174246]
 	valid = true
 	comment = " "
 
@@ -1086,7 +1086,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [53411.615317001735, 0.5854205129515647]
+	cal = [70575.03873673148, 0.5767571470217802]
 	valid = true
 	comment = " "
 
@@ -1095,7 +1095,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [42940.88699122669, 0.5795257517533599]
+	cal = [48168.76185940672, 0.5733220514794268]
 	valid = true
 	comment = " "
 
@@ -1104,7 +1104,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [34748.51649449614, 0.5999113413505058]
+	cal = [43198.36373830144, 0.59072559805364]
 	valid = true
 	comment = " "
 
@@ -1113,7 +1113,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [29375.407055075728, 0.5578320973196509]
+	cal = [33130.70977652866, 0.5498364972758828]
 	valid = true
 	comment = " "
 
@@ -1122,7 +1122,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [31558.596757528852, 0.5469655696875454]
+	cal = [35358.911305126094, 0.5391334232323389]
 	valid = true
 	comment = " "
 
@@ -1131,7 +1131,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [31121.749782888004, 0.55027392292341]
+	cal = [80851.03199118517, 0.5251463500472074]
 	valid = true
 	comment = " "
 
@@ -1140,7 +1140,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [31191.659868849405, 0.5589303318211847]
+	cal = [41749.961583021985, 0.5479527348090799]
 	valid = true
 	comment = " "
 
@@ -1185,7 +1185,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [33992.766945830386, 0.5633106996256755]
+	cal = [40249.3623734949, 0.554850270528982]
 	valid = true
 	comment = " "
 
@@ -1194,7 +1194,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [29664.1281292582, 0.5635800768290652]
+	cal = [40399.55043113439, 0.5525891451991947]
 	valid = true
 	comment = " "
 
@@ -1203,7 +1203,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [59214.20888943819, 0.5305106632833675]
+	cal = [68419.81701243206, 0.5263281615678881]
 	valid = true
 	comment = " "
 
@@ -1212,7 +1212,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [34687.48789704542, 0.567854307563554]
+	cal = [41170.04709754098, 0.5586896539571087]
 	valid = true
 	comment = " "
 
@@ -1221,7 +1221,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [35362.5485183395, 0.5632285943476518]
+	cal = [67912.39352970354, 0.5197832381550331]
 	valid = true
 	comment = " "
 
@@ -1230,7 +1230,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [48830.71168467342, 0.5597997380244596]
+	cal = [69120.38084159841, 0.5243354966725663]
 	valid = true
 	comment = " "
 
@@ -1239,7 +1239,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [72364.69938389533, 0.5084386603748482]
+	cal = [78434.64114760092, 0.49263546535224784]
 	valid = true
 	comment = " "
 
@@ -1248,7 +1248,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [58927.830122524436, 0.5005796421990857]
+	cal = [49486.39788114953, 0.5266072248914427]
 	valid = true
 	comment = " "
 
@@ -1257,7 +1257,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [44358.89342596122, 0.5815060760644603]
+	cal = [57876.72203376098, 0.5736087595173877]
 	valid = true
 	comment = " "
 
@@ -1266,7 +1266,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [46766.44371451303, 0.5796991942667378]
+	cal = [61017.30543329343, 0.5721899906707902]
 	valid = true
 	comment = " "
 
@@ -1275,7 +1275,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [49004.54594371111, 0.5828335430241117]
+	cal = [63823.01879053914, 0.5746720421941488]
 	valid = true
 	comment = " "
 
@@ -1284,7 +1284,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [66510.95872814162, 0.5643867817852457]
+	cal = [76107.30962688623, 0.5600001660932744]
 	valid = true
 	comment = " "
 
@@ -1293,7 +1293,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [38416.48618693533, 0.581039502447469]
+	cal = [51227.1268628922, 0.5733306717222518]
 	valid = true
 	comment = " "
 
@@ -1302,7 +1302,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [38016.90253500753, 0.5773456035193002]
+	cal = [46763.03418876215, 0.5712332033077756]
 	valid = true
 	comment = " "
 
@@ -1311,7 +1311,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [33101.28116821523, 0.585092074870696]
+	cal = [41463.86496301681, 0.5780770312043749]
 	valid = true
 	comment = " "
 
@@ -1320,7 +1320,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [55019.580507083345, 0.5754495943081744]
+	cal = [70398.15423590994, 0.5688632088006866]
 	valid = true
 	comment = " "
 
@@ -1329,7 +1329,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [43249.30233893583, 0.5984765276848502]
+	cal = [53584.941607022985, 0.5907169134499374]
 	valid = true
 	comment = " "
 
@@ -1338,7 +1338,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [44725.89585238555, 0.5879948115404747]
+	cal = [58492.66647513641, 0.5788485826330465]
 	valid = true
 	comment = " "
 
@@ -1347,7 +1347,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [45007.261121311414, 0.5960633452458559]
+	cal = [55877.14852969179, 0.5868948291087855]
 	valid = true
 	comment = " "
 
@@ -1356,7 +1356,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [57847.65294259893, 0.6617498042650484]
+	cal = [73408.85098702167, 0.6534181373751848]
 	valid = true
 	comment = " "
 
@@ -1365,7 +1365,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [59133.05758343259, 0.5901579297829148]
+	cal = [70806.15181456182, 0.5856006743104543]
 	valid = true
 	comment = " "
 
@@ -1374,7 +1374,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [52292.567290206076, 0.573810629814108]
+	cal = [64945.01356888902, 0.5675848634731795]
 	valid = true
 	comment = " "
 
@@ -1383,7 +1383,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [44559.91806468339, 0.5824210580014292]
+	cal = [53899.439070172186, 0.5750006062537635]
 	valid = true
 	comment = " "
 
@@ -1392,7 +1392,7 @@ comment = " Eu-152 (run 4) cal, shifts and period from run 0039       "
 	ring = "0"
 	phi = "0"
 	dt = 0.0
-	cal = [53852.89924572264, 0.5905777391824757]
+	cal = [67922.70793805017, 0.5832130508127849]
 	valid = true
 	comment = " "
 

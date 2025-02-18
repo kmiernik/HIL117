@@ -59,6 +59,11 @@ function prescan(data_dir, config::Dict;
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
 
+    if length(files_caen) < 1
+        @warn "No caendat files found"
+        return 0
+    end
+
     files_dia = readdir(data_dir, join=true)
     filter!(x->split(x, '.')[2] == "dat", files_dia)
     files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
@@ -68,10 +73,14 @@ function prescan(data_dir, config::Dict;
         n_files = length(files_caen)
     end
 
-    #TODO -> what if there are no dia files?
-    if n_files > length(files_dia)
-        @warn "There are no $n_files diamant file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
-        n_files = length(files_caen)
+    if n_files > length(files_caen) && n_files > length(files_dia)
+        n_new = maximum(length(files_caen), length(files_dia))
+        @warn "There are no both $n_files caendat and diamant file(s) to be prescanned, using $(n_new) file(s) instead"
+        n_files = n_new
+    elseif n_files > length(files_dia)
+        @warn "There are no $n_files diamant file(s) to be prescanned"
+    elseif n_files > length(files_caen)
+        @warn "There are no $n_files caendat file(s) to be prescanned"
     end
 
     cal_ge = zeros(7, 16)
@@ -138,7 +147,11 @@ function prescan(data_dir, config::Dict;
                 end
                 t = hit.ts * 4 + hit.tf / 256 
                 if hit.E > Estartmin
-                    push!(t_ref, t)
+                    pid = (Float64(hit.qshort) + randn()) / Float64(hit.E)
+                    if (0.75 <= pid < 0.95)
+                        #Good gamma
+                        push!(t_ref, t)
+                    end
                 end
             end
         end
@@ -153,15 +166,23 @@ function prescan(data_dir, config::Dict;
                     0, block_dia, 0)
     println()
     
-    i_dia = 1
-    dfin = open(files_dia[1], "r")
-    dsize = filesize(files_dia[1])
-
     caen_good = true
     dia_good = true
+    i_dia = 1
+    if length(files_dia) > 0
+        dfin = open(files_dia[1], "r")
+        dsize = filesize(files_dia[1])
+    else
+        @warn "No diamant files found"
+        dfin = IOBuffer()
+        close(dfin)
+        dsize = 0
+        dia_good = false
+        i_dia = n_files 
+    end
+    
     t_caen = 0
     t_dia = 0
-    
     n_hits = 0
 
     while caen_good || dia_good
@@ -196,9 +217,11 @@ function prescan(data_dir, config::Dict;
             E = hit.E
             loc = hit.board * 16 + hit.ch + 1
             if loc in 1:2:32
+                #=
                 E = (quadquad(hit.E, 
                               cal_ge[:, round(Int64, loc/2, RoundDown)+1])
                      + (rand() - 0.5) * 0.5)
+                =#
             end
             if E_min < E < E_max
                 E_loc[loc, round(Int64, E, RoundUp)] += 1
