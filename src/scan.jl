@@ -1,116 +1,4 @@
 """
-Parametrs of spectra for scan 
-
-    dE: energy step (eg. 1 keV)
-    Emax: max. energy (e.g. 4000 keV)
-    E2max: max. energy (e.g. 3000 keV) for gamma-gamma
-    dt: time step for time spectra (1 ns)
-    dpid: PID step for pid spectra (e.g. 0.01)
-    pidmax: max PID (0-max), e.g. (0-1.27 -> 128 bins)
-    tmax: max. time (e.g 100 ns) for time spectra
-    Mmax: max. multiplicity
-    ge_low: lowest energy in keV for Ge detector to accept
-    bgo_low: lowest energy in channels for BGO detector to use in compton supp.
-    neda_low: lowest energy in channels for NEDA detector to use
-    dia_low: lowest energy in channels for DIAMANT detector to use
-    last_label: last valid label
-"""
-struct SpectraPars
-    dE::Float64
-    Emax::Float64
-    E2max::Float64
-    dt::Float64
-    tmax::Float64
-    dpid::Float64
-    pidmax::Float64
-    Mmax::Int64
-    ge_low::Float64
-    bgo_low::Float64
-    neda_low::Float64
-    dia_low::Float64
-    last_label::Int64
-end
-
-
-function SpectraPars(config::Dict{String, Any})
-    SpectraPars(config["spectra"]["dE"],
-                config["spectra"]["Emax"],
-                config["spectra"]["E2max"],
-                config["spectra"]["dt"],
-                config["spectra"]["tmax"],
-                config["spectra"]["dpid"],
-                config["spectra"]["pidmax"],
-                config["spectra"]["Mmax"],
-                config["spectra"]["ge_low"],
-                config["spectra"]["bgo_low"],
-                config["spectra"]["neda_low"],
-                config["spectra"]["dia_low"],
-                maximum(parse.(Int64, keys(config["label"])))
-               )
-end
-
-
-"""
-    scattering!(event, hits, type_table, distance_table, specpars)
-
-    Perform Compton suppresion and scattering suppresion on event_hits
-    * type_table - table of types of detectors (on given location)
-    * distance_table - table of distances between detectors 
-    * specpars - SpecPars struct
-
-"""
-function scattering!(event, hits, type_table, distance_table, specpars)
-    M = length(event)
-
-    del_list = Int64[]
-
-    for i in 1:M
-        iloc = hits[event[i]].loc
-        if type_table[iloc] == 2
-            #BGO
-            push!(del_list, i)
-            for j in i+1:M
-                # Search for Ge
-                jloc = hits[event[j]].loc
-                if (!(j in del_list) 
-                    && type_table[jloc] == 1
-                    && distance_table[iloc, jloc] == 0)
-                    push!(del_list, j)
-                end
-            end
-        elseif type_table[hits[event[i]].loc] == 3
-            #NEDA
-            for j in i+1:M
-                jloc = hits[event[j]].loc
-                #NEDA-NEDA gamma-scattering
-                if ( !(j in del_list) 
-                     && type_table[jloc] == 3
-                     && hits[event[i]].pid == 1
-                     && hits[event[j]].pid == 1
-                     && abs(abs(hits[event[i]].t - hits[event[j]].t) 
-                            - distance_table[iloc, jloc] / 0.29979 ) < 1.0)
-                        push!(del_list, j)
-                end
-                #NEDA-NEDA neutron-scattering
-                if ( !(j in del_list) 
-                     && type_table[jloc] == 3
-                     && hits[event[i]].pid == 2
-                     && hits[event[j]].pid == 2)
-                    vn = sqrt(2 * hits[event[i]].E / 939565.0) * 0.29979
-                    if ( abs(abs(hits[event[i]].tof - hits[event[j]].tof) 
-                             - distance_table[iloc, jloc] / vn)  < 1.0)
-                        push!(del_list, j)
-                    end
-                end
-            end
-        end
-    end
-    deleteat!(event, sort(del_list))
-end
-
-
-
-"""
     distance(config, valid_table, last_label)
 
     Create distance_table between detectors, additional index (last)
@@ -365,376 +253,19 @@ function prepare_spectra(spectranameout)
     spectra
 end
 
-
-"""
-    pid - particle id
-    0 - unknown
-    1 - gamma
-    2 - neutron
-    3 - proton
-    4 - alpha
-"""
-struct Hit
-    loc::UInt8
-    E::Float64
-    t::Float64
-    tof::Float64
-    pid::UInt8
-end
-
-
-function Hit()
-    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(UInt8))
-end
-
-
-function Base.zero(::Type{Hit})
-    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(UInt8))
-end
-
-
-"""
-    event_builder!(chunk, last_event, spectra, specpars, t_event;
-                       valid_table, cal_table, fcal_table, shift_table,
-                       type_table, distance_table, pid_table)
-
-    Keeps last event in chunk, swaps it to the front,
-    returns i_chunk (position of last unused hit in chunk)
-"""
-function event_builder!(chunk, last_event, spectra, specpars, t_event;
-                       valid_table, cal_table, fcal_table, shift_table,
-                       type_table, distance_table, pid_table)
-    d_target_neda = 1.0
-    hits = [last_event;]
-    sort!(chunk, by=x->(x.ts * 4 + x.tf / 256 - shift_table[x.board * 16 + x.ch + 1]))
-    t_last_neda_g = 0.0
-    for rawhit in chunk
-        loc = rawhit.board * 16 + rawhit.ch + 1
-        if loc > specpars.last_label
-            continue
-        elseif !valid_table[loc]
-            continue
-        end
-        t = rawhit.ts * 4 + rawhit.tf / 256 - shift_table[loc]
-        if type_table[loc] == 1
-            #Ge
-            ige = round(Int64, loc / 2, RoundDown) + 1
-            E = quad(quadquad(
-                rawhit.E, cal_table[:, loc]) + (rand()-0.5), 
-                        fcal_table[:, ige])
-            if E < specpars.ge_low
-                continue
-            end
-            push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(1)))
-        elseif type_table[loc] == 2
-            #BGO
-            if rawhit.E < specpars.bgo_low
-                continue
-            end
-            iE = round(Int64, rawhit.E / specpars.dE, RoundDown)
-            if (1 <= iE < specpars.Emax)
-                spectra.Eloc[iE, loc] += 1
-            end
-            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, UInt8(1)))
-        elseif type_table[loc] == 3
-            #NEDA
-            E = Float64(rawhit.E)
-            if E < specpars.neda_low
-                continue
-            end
-            pid = (Float64(rawhit.qshort) + randn()) / E
-            iE = round(Int64, E / specpars.dE, RoundDown)
-            ip = round(Int64, pid / specpars.dpid, RoundUp)
-            if (1 <= iE < specpars.Emax 
-                && 1 <= ip < specpars.pidmax / specpars.dpid)
-                spectra.neda_pid[iE, ip] += 1
-            end
-            tof = t - t_last_neda_g
-            itof = round(Int64, tof / specpars.dt, RoundDown)
-            if (1 <= itof < specpars.tmax 
-                && 1 <= ip < specpars.pidmax / specpars.dpid)
-                spectra.neda_tof[itof, ip] += 1
-            end
-            type = UInt8(0)
-            if E > pid_table[1] && pid_table[2] <= pid < pid_table[3]
-                #Neutron
-                E = (5227.121 * (d_target_neda / tof)^2) * 1000 + randn()
-                if E > 0.0 && !isinf(E) 
-                    push!(hits, Hit(UInt8(loc), E, t_last_neda_g, 
-                                    tof, UInt8(2)))
-                end
-            else 
-                # Gamma
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(1)))
-                t_last_neda_g = t
-            end
-        elseif type_table[loc] == 4
-            #DIAMANT
-            E = Float64(rawhit.E)
-            T = Float64(rawhit.qshort)
-            pid = (T / E 
-                - cal_table[1, loc] / E^2 
-                - cal_table[2, loc] + 0.5)
-            iE = round(Int64, E / specpars.dE, RoundDown)
-            ip = round(Int64, pid / specpars.dpid, RoundUp)
-            if (1 <= iE < specpars.Emax 
-                && 1 <= ip < specpars.pidmax / specpars.dpid)
-                spectra.dia_pid[iE, ip] += 1
-            end
-            type = UInt8(0)
-            if pid_table[4] < pid <= pid_table[5]
-                # Alpha
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(4)))
-            elseif pid_table[6] < pid <= pid_table[7]
-                # Proton
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(3)))
-            end
-        end
-    end
-    sort!(hits, by=x->x.t)
-    n_hits = size(hits)[1]
-
-    event = [1]
-    for i in 2:n_hits
-        if hits[i].t - hits[event[1]].t < t_event
-            push!(event, i)
-        else
-            Mraw = length(event)
-            scattering!(event, hits, type_table, distance_table, specpars)
-            M = length(event)
-            ges = 0
-            gammas = 0
-            neutrons = 0
-            protons = 0
-            alphas = 0
-            for j in 1:M
-                jloc = hits[event[j]].loc
-                jE = round(Int64, hits[event[j]].E / specpars.dE, RoundDown)
-                jt = round(Int64, 
-                           (hits[event[j]].t - hits[event[1]].t) / specpars.dt,
-                           RoundDown) + 1
-                if 1 <= jt <= specpars.tmax
-                    spectra.tloc[jt, jloc] += 1
-                end
-                if type_table[jloc] == 1
-                    ges += 1
-                    if 1 <= jE <= specpars.Emax
-                        spectra.gP[jE, 1] += 1
-                    end
-                elseif type_table[jloc] == 3
-                    if hits[event[j]].pid == 1
-                        gammas += 1
-                    elseif hits[event[j]].pid == 2
-                        neutrons +=1
-                        if 1 <= jE <= specpars.Emax
-                            spectra.partE[jE, 2] += 1
-                        end
-                    end
-                elseif type_table[jloc] == 4
-                    if hits[event[j]].pid == 3
-                        protons +=1
-                        if 1 <= jE <= specpars.Emax
-                            spectra.partE[jE, 3] += 1
-                        end
-                    elseif hits[event[j]].pid == 4
-                        alphas += 1
-                        if 1 <= jE <= specpars.Emax
-                            spectra.partE[jE, 4] += 1
-                        end
-                    end
-                end
-            end
-            for (itype, m) in enumerate([Mraw, M, ges, gammas, neutrons,
-                                         protons, alphas])
-                iM = ifelse(m < specpars.Mmax-2, m+1, specpars.Mmax-1)
-                spectra.MP[iM, itype] += 1
-            end
-            if ges < 1
-                event = [i]
-                continue
-            end
-
-            for j in 1:M
-                jloc = hits[event[j]].loc
-                if type_table[jloc] != 1
-                    continue
-                end
-                jE = round(Int64, hits[event[j]].E / specpars.dE, RoundDown)
-                if jE < 1 || jE > specpars.Emax
-                    continue
-                end
-                spectra.Eloc[jE, jloc] += 1
-                if neutrons > 0
-                    spectra.gP[jE, 2] += 1
-                end
-                if protons > 0
-                    spectra.gP[jE, 3] += 1
-                end
-                if alphas > 0
-                    spectra.gP[jE, 4] += 1
-                end
-                if 1 <= M < specpars.Mmax
-                    spectra.gM[jE, M] += 1
-                else
-                    spectra.gM[jE, specpars.Mmax-1] += 1
-                end
-                if 1 <= jE <= specpars.E2max 
-                    for k in j+1:M
-                        kloc = hits[event[k]].loc
-                        if type_table[kloc] != 1
-                            continue
-                        end
-                        kE = round(Int64, 
-                                   hits[event[k]].E / specpars.dE, RoundDown)
-                        if 1 <= kE <= specpars.E2max
-                            spectra.gg[jE, kE] += 1
-                            spectra.gg[kE, jE] += 1
-                            if protons > 0
-                                spectra.gg_proton[jE, kE] += 1
-                                spectra.gg_proton[kE, jE] += 1
-                            end
-                            if alphas > 0
-                                spectra.gg_alpha[jE, kE] += 1
-                                spectra.gg_alpha[kE, jE] += 1
-                            end
-                            if alphas == 0
-                                spectra.gg_no_alpha[jE, kE] += 1
-                                spectra.gg_no_alpha[kE, jE] += 1
-                            end
-                        end
-                    end
-                end
-            end
-            event = [i]
-        end
-    end
-    
-    left_hits = Hit[]
-    for i in event
-        push!(left_hits, hits[i])
-    end
-    
-    return left_hits
-end
-
-
-function progress_dots(prefix, time_start, cpos, dpos,
-                       i_caen, block_caen, n_caen,
-                       i_dia, block_dia, n_dia)
-    print("\r", prefix)
-    for i in 1:i_caen-1
-        print("\u25C9") 
-    end
-    if 0 < cpos < 0.25
-        if block_caen
-            print("\u25D4")
-            block_caen = false
-        else
-            print("\u25CB")
-            block_caen = true
-        end
-    elseif 0.25 <= cpos < 0.5
-        if block_caen
-            print("\u25D1")
-            block_caen = false
-        else
-            print("\u25D4")
-            block_caen = true
-        end
-    elseif 0.5 <= cpos < 0.75
-        if block_caen
-            print("\u25D5")
-            block_caen = false
-        else
-            print("\u25D1")
-            block_caen = true
-        end
-    elseif 0.75 <= cpos < 1.0
-        if block_caen
-            print("\u25CF")
-            block_caen = false
-        else
-            print("\u25D5")
-            block_caen = true
-        end
-    elseif cpos == 1.0
-        print("\u25C9")
-        block_caen = false
-    end
-    for i in 1:n_caen-i_caen
-        print("\u25CB")
-    end
-    print(" ")
-    for i in 1:i_dia-1
-        print("\u25C9") 
-    end
-    if 0 < dpos < 0.25
-        if block_dia
-            print("\u25D4")
-            block_dia = false
-        else
-            print("\u25CB")
-            block_dia = true
-        end
-    elseif 0.25 <= dpos < 0.5
-        if block_dia
-            print("\u25D1")
-            block_dia = false
-        else
-            print("\u25D4")
-            block_dia = true
-        end
-    elseif 0.5 <= dpos < 0.75
-        if block_dia
-            print("\u25D5")
-            block_dia = false
-        else
-            print("\u25D1")
-            block_dia = true
-        end
-    elseif 0.75 <= dpos < 1.0
-        if block_dia
-            print("\u25CF")
-            block_dia = false
-        else
-            print("\u25D5")
-            block_dia = true
-        end
-    elseif dpos == 1.0
-        print("\u25C9")
-        block_dia = false
-    end
-    for i in 1:n_dia-i_dia
-        print("\u25CB")
-    end
-    dtime = (Dates.Time(Dates.now()) - time_start)
-    @printf(" %8.1f s ", dtime.value * 1e-9)
-
-    return block_caen, block_dia
-end
-
 """
     config_to_tables(config)
 
     Convert config to location based fast access tables 
 
     returns:
-    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table
+    type_table, valid_table, cal_table, shift_table, pid_table
 """
 function config_to_tables(config, last_label)
-    type_table = zeros(UInt8, last_label)
+    type_table = zeros(DetectorType, last_label)
     valid_table = zeros(Bool, last_label)
-    cal_table = zeros(Float64, 7, last_label)
-    fcal_table = zeros(Float64, 3, 16)
+    cal_table = zeros(Float64, 2, last_label)
     shift_table = zeros(Float64, last_label)
-    pid_table = zeros(Float64, 7)
-    pid_table[1] = config["pid"]["En_low"]
-    pid_table[2] = config["pid"]["n_low"]
-    pid_table[3] = config["pid"]["n_high"]
-    pid_table[4] = config["pid"]["a_low"]
-    pid_table[5] = config["pid"]["a_high"]
-    pid_table[6] = config["pid"]["p_low"]
-    pid_table[7] = config["pid"]["p_high"]
 
     for label in keys(config["label"])
         loc = parse(Int64, label)
@@ -744,29 +275,19 @@ function config_to_tables(config, last_label)
             valid_table[loc] = true
             shift_table[loc] = config["label"]["$loc"]["dt"]
         end
+        cal_table[:, loc] = config["label"]["$loc"]["cal"]
         if config["label"]["$loc"]["type"] == "Ge"
-            type_table[loc] = 1
-            cal_table[:, loc] = config["label"]["$loc"]["cal"]
-            ige = round(Int64, loc / 2, RoundDown) + 1
-            if haskey(config["label"]["$loc"], "fcal")
-                fcal_table[:, ige] = config["label"]["$loc"]["fcal"]
-            else
-                @warn "No fine calibration for Ge $ige"
-                fcal_table[:, ige] = [0.0, 1.0, 0.0]
-            end
+            type_table[loc] = GE
         elseif config["label"]["$loc"]["type"] == "BGO"
-            type_table[loc] = 2
-            cal_table[1:2, loc] = config["label"]["$loc"]["cal"]
+            type_table[loc] = BGO
         elseif config["label"]["$loc"]["type"] == "NEDA"
-            type_table[loc] = 3
-            cal_table[1:2, loc] = config["label"]["$loc"]["cal"]
+            type_table[loc] = NEDA
         elseif config["label"]["$loc"]["type"] == "DIAMANT"
-            type_table[loc] = 4
-            cal_table[1:2, loc] = config["label"]["$loc"]["cal"]
+            type_table[loc] = DIAMANT
         end
     end
 
-    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table
+    type_table, valid_table, cal_table, shift_table
 end
 
 
@@ -794,7 +315,6 @@ end
 function scan_run(data_dir, config::Dict, prefix;
                     chunk_size=10_000, dia_buf=100, n_prescan=2, edfmode=false)
 
-    time_start = Dates.Time(Dates.now())
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
     run_number = parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-2])
@@ -806,11 +326,10 @@ function scan_run(data_dir, config::Dict, prefix;
     println("\u25CD Run $run_number ")
     println("\u25CD Prescanning $n_prescan file(s)")
     E_loc, t_loc = prescan(data_dir, config; n_files=n_prescan)
-    println()
     if n_prescan > 0
-        print("    \u25E6 Calculating shifts, fine calibration, and period (")
+        print("    \u25E6 Calculating shifts, calibration, and period (")
         config = find_shifts(t_loc, config)
-        config = fine_cal(E_loc, config)
+        config = find_cal(E_loc, config)
         config = find_period(t_loc, config)
         @printf("%.3f ns)\n", config["spectra"]["beam_period"])
     end
@@ -847,6 +366,17 @@ function scan_run(data_dir, config::Dict, prefix;
     dfin = open(files_dia[1], "r")
     dsize = filesize(files_dia[1])
 
+    totsize = 0
+    donesize = 0
+    for filename in files_caen
+        totsize += filesize(filename)
+    end
+    for filename in files_dia
+        totsize += filesize(filename)
+    end
+    prog = Progress(totsize; dt=1.0, desc="\tMain scan   ", barlen=30, 
+                    color=:red)
+
     caen_good = true
     dia_good = true
     t_caen = 0
@@ -860,18 +390,17 @@ function scan_run(data_dir, config::Dict, prefix;
         end
     end
     
-    type_table, valid_table, cal_table, fcal_table, shift_table, pid_table = config_to_tables(config, last_label)
+    pidpars = PidPars(config)
+
+    type_table, valid_table, cal_table, shift_table = config_to_tables(config, last_label)
 
     distance_table = distance(config, valid_table, last_label)
 
     chunk = zeros(RawHit, chunk_size)
     i_chunk = 0
     chunk_number = 1
-    empty = RawHit()
     last_event = Hit[]
 
-    block_caen = true
-    block_dia = true
     while caen_good || dia_good
 
         hits = RawHit[]
@@ -906,42 +435,33 @@ function scan_run(data_dir, config::Dict, prefix;
                                                 specpars, beam_period;
                                                 valid_table=valid_table, 
                                                 cal_table=cal_table,
-                                                fcal_table=fcal_table, 
                                                 shift_table=shift_table,
                                                 type_table=type_table,
                                                 distance_table=distance_table,
-                                                pid_table=pid_table)
+                                                pidpars=pidpars)
 
                 else
                     last_event = event_builder!(chunk, last_event, spectra, 
                                                 specpars, beam_period;
                                                 valid_table=valid_table, 
                                                 cal_table=cal_table,
-                                                fcal_table=fcal_table, 
                                                 shift_table=shift_table,
                                                 type_table=type_table,
                                                 distance_table=distance_table,
-                                                pid_table=pid_table)
+                                                pidpars=pidpars)
                 end
                 i_chunk = 0
                     
                 chunk_number += 1
                 if chunk_number % 100 == 0
+                    current_pos = 0
                     if isopen(cfin)
-                        cpos = position(cfin) / csize
-                    else
-                        cpos = 1.0
+                        current_pos += position(cfin)
                     end
                     if isopen(dfin)
-                        dpos = position(dfin) / dsize
-                    else
-                        dpos = 1.0
+                        current_pos += position(dfin)
                     end
-                    block_caen, block_dia = progress_dots(
-                                        "    \u25E6 scanning : ", 
-                                        time_start, cpos, dpos,
-                                        i_caen, block_caen, length(files_caen),
-                                        i_dia, block_dia, length(files_dia))
+                    update!(prog, donesize + current_pos)
                 end
             else
                 chunk[i_chunk] = hit
@@ -951,6 +471,7 @@ function scan_run(data_dir, config::Dict, prefix;
         if eof(cfin)
             close(cfin)
             if i_caen < length(files_caen)
+                donesize += filesize(files_caen[i_caen])
                 i_caen += 1
                 cfin = open(files_caen[i_caen], "r")
                 csize = filesize(files_caen[i_caen])
@@ -961,6 +482,7 @@ function scan_run(data_dir, config::Dict, prefix;
         if eof(dfin)
             close(dfin)
             if i_dia < length(files_dia)
+                donesize += filesize(files_dia[i_dia])
                 i_dia += 1
                 dfin = open(files_dia[i_dia], "r")
                 dsize = filesize(files_dia[i_dia])
@@ -969,11 +491,8 @@ function scan_run(data_dir, config::Dict, prefix;
             end
         end
     end
+    update!(prog, totsize)
 
-    progress_dots("    \u25E6 done     : ", time_start, 1.0, 1.0,
-                    i_caen, block_caen, length(files_caen),
-                    i_dia, block_dia, length(files_dia))
-    println()
     if edfmode
         close(edffile)
     else

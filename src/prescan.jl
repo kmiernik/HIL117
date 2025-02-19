@@ -1,21 +1,3 @@
-function quadquad(x::Real, p)
-    if x < p[6]
-        return p[1] + p[2] * x + p[7] * x^2
-    else
-        return p[3] + p[4] * x + p[5] * x^2
-    end
-end
-
-
-function quadquad(x, p)
-    y = zeros(size(x))
-    for (i, xi) in enumerate(x)
-        y[i] = quadquad(xi, p)
-    end
-    y
-end
-
-
 """
 """
 function prescan(data_dir, configfile::String; args...)
@@ -31,7 +13,7 @@ end
                                     dt_min=-1000.0, dt_max=1000.0, dt=1.0)
     
     Prescan run, take first n_files
-    Returns Energy-loc and Time-loc tables
+    Returns Energy-loc (raw ch numbers) and Time-loc tables
     Time-loc is calculated vs. reference detector (ref_label) 
         and is histogram dt_min:dt:dt_max
 
@@ -39,7 +21,7 @@ end
     Reference events have energy larger than Estartmin
 """
 function prescan(data_dir, config::Dict; 
-                n_files=2, ref_label=34, E_min=20, E_max=8192, Estartmin=100, 
+                n_files=2, ref_label=34, E_min=20, E_max=32768, Estartmin=100, 
                                     dt_min=-1000.0, dt_max=1000.0, dt=1.0)
 
     last_label = 0
@@ -48,6 +30,8 @@ function prescan(data_dir, config::Dict;
             last_label = parse(Int64, loc)
         end
     end
+    
+    pidpars = PidPars(config)
 
     E_loc = zeros(Int64, last_label, length(1:E_max))
     t_loc = zeros(Int64, last_label, length(dt_min:dt:dt_max))
@@ -83,11 +67,6 @@ function prescan(data_dir, config::Dict;
         @warn "There are no $n_files caendat file(s) to be prescanned"
     end
 
-    cal_ge = zeros(7, 16)
-    for loc in 1:2:32
-        cal_ge[:, round(Int64, loc/2, RoundDown)+1] = config["label"]["$loc"]["cal"]
-    end
-
     cfin = open(files_caen[1], "r")
     i_caen = 1
     if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
@@ -100,6 +79,14 @@ function prescan(data_dir, config::Dict;
         return 0
     end
     csize = filesize(files_caen[1])
+
+    totsize = 0
+    donesize = 0
+    for filename in files_caen[1:n_files]
+        totsize += filesize(filename)
+    end
+    prog = Progress(totsize; dt=1.0, desc="\tRef. timing ",
+                     barlen=30, color=:green)
 
     i_file = 0
     t_ref = Float64[]
@@ -131,16 +118,11 @@ function prescan(data_dir, config::Dict;
             for hit in hits
                 n_hits += 1
                 if n_hits % n_print == 0
+                    current_pos = 0
                     if isopen(cfin)
-                        cpos = position(cfin) / csize
-                    else
-                        cpos = 1.0
+                        current_pos = position(fin)
                     end
-                    block_caen, block_dia = progress_dots(
-                                                  "    \u25E6 ref. time  : ",
-                                                    time_start, cpos, 0.0,
-                                                    i_caen, block_caen, n_files,
-                                                    0, block_dia, 0)
+                    update!(prog, donesize + current_pos)
                 end
                 if hit.board * 16 + hit.ch + 1 != ref_label
                     continue
@@ -148,23 +130,20 @@ function prescan(data_dir, config::Dict;
                 t = hit.ts * 4 + hit.tf / 256 
                 if hit.E > Estartmin
                     pid = (Float64(hit.qshort) + randn()) / Float64(hit.E)
-                    if (0.75 <= pid < 0.95)
+                    if (pidpars.g_low <= pid < pidpars.g_high)
                         #Good gamma
                         push!(t_ref, t)
                     end
                 end
             end
         end
+        donesize += filesize(filename)
         close(fin)
     end
+    update!(prog, totsize)
     sort!(t_ref)
     i_ref = 1
     n_ref = length(t_ref)
-
-    progress_dots("    \u25E6 ref. time  : ", time_start, 1.0, 0.0,
-                    n_files, block_caen, n_files,
-                    0, block_dia, 0)
-    println()
     
     caen_good = true
     dia_good = true
@@ -180,6 +159,18 @@ function prescan(data_dir, config::Dict;
         dia_good = false
         i_dia = n_files 
     end
+
+    totsize = 0
+    donesize = 0
+    for filename in files_caen[1:n_files]
+        totsize += filesize(filename)
+    end
+    n_dia = ifelse(length(files_dia) >= n_files, n_files, length(files_dia))
+    for filename in files_dia[1:n_dia]
+        totsize += filesize(filename)
+    end
+    prog = Progress(totsize; dt=1.0, desc="\tPrescan     ", 
+                    barlen=30, color=:green)
     
     t_caen = 0
     t_dia = 0
@@ -214,17 +205,9 @@ function prescan(data_dir, config::Dict;
             n_hits += 1
 
             t = hit.ts * 4 + hit.tf / 256 
-            E = hit.E
             loc = hit.board * 16 + hit.ch + 1
-            if loc in 1:2:32
-                #=
-                E = (quadquad(hit.E, 
-                              cal_ge[:, round(Int64, loc/2, RoundDown)+1])
-                     + (rand() - 0.5) * 0.5)
-                =#
-            end
-            if E_min < E < E_max
-                E_loc[loc, round(Int64, E, RoundUp)] += 1
+            if E_min < hit.E < E_max
+                E_loc[loc, hit.E] += 1
 
                 if t > t_ref[i_ref]
                     while i_ref < n_ref
@@ -255,20 +238,14 @@ function prescan(data_dir, config::Dict;
             end
 
             if n_hits % n_print == 0
+                current_pos = 0
                 if isopen(cfin)
-                    cpos = position(cfin) / csize
-                else
-                    cpos = 1.0
+                    current_pos += position(cfin)
                 end
                 if isopen(dfin)
-                    dpos = position(dfin) / dsize
-                else
-                    dpos = 1.0
+                    current_pos += position(dfin)
                 end
-                block_caen, block_dia = progress_dots("    \u25E6 prescan    : ",
-                                                time_start, cpos, dpos,
-                                                i_caen, block_caen, n_files,
-                                                i_dia, block_dia, n_files)
+                update!(prog, donesize + current_pos)
             end
 
         end
@@ -276,6 +253,7 @@ function prescan(data_dir, config::Dict;
         if eof(cfin)
             close(cfin)
             if i_caen < length(files_caen) && i_caen < n_files
+                donesize += filesize(files_caen[i_caen])
                 i_caen += 1
                 cfin = open(files_caen[i_caen], "r")
                 csize = filesize(files_caen[i_caen])
@@ -286,6 +264,7 @@ function prescan(data_dir, config::Dict;
         if eof(dfin)
             close(dfin)
             if i_dia < length(files_dia) && i_dia < n_files
+                donesize += filesize(files_dia[i_dia])
                 i_dia += 1
                 dfin = open(files_dia[i_dia], "r")
                 dsize = filesize(files_dia[i_dia])
@@ -294,9 +273,7 @@ function prescan(data_dir, config::Dict;
             end
         end
     end
-    progress_dots("    \u25E6 prescan    : ", time_start, 1.0, 1.0,
-                    i_caen, block_caen, n_files,
-                    i_dia, block_dia, n_files)
+    update!(prog, totsize)
 
     E_loc, t_loc
 end
@@ -371,67 +348,50 @@ function find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1,
 end
 
 
-function fine_cal(E_loc, configfile::String; args...)
+function find_cal(E_loc, configfile::String; args...)
     config = TOML.parsefile(configfile)
-    fine_cal(E_loc, config; args...)
+    find_cal(E_loc, config; args...)
 end
 
 
 """
-    fine_cal(E_loc, configfile; doplot=false)
+    find_cal(E_loc, configfile; doplot=false)
 
-    Take E_loc table and perform fine calibration for the run
-    Returns new config with fcal fields for Ge
+    Take E_loc table and perform calibration for the run
+    Returns new config with cal fields for Ge (linear)
 """
-function fine_cal(E_loc, config::Dict)
+function find_cal(E_loc, config::Dict)
     new_config = copy(config)
-
-    lines = [
-             294.17 3
-             346.71 5
-             373.75 5
-             409.20 5
-             511.00 5
-             552.05 4
-             #657.76 4
-             #1256.69 5
-             1293.56 15
-             #1299.91 5
-            ]
-    for loc in 1:2:32
-        if !config["label"]["$loc"]["valid"]
+    
+    last_label = size(E_loc)[1]
+    x = collect(1:size(E_loc)[2]) .- 0.5
+    for loc in 1:last_label
+        if (!haskey(config["label"], "$loc")
+            || !config["label"]["$loc"]["valid"] 
+            || config["label"]["$loc"]["type"] != "Ge")
             continue
         end
         
-        Efit = Float64[]
-        sfit = Float64[]
-        ip = 0
-        n_peaks = size(lines)[1]
-        guess = []
-        for ip in 1:n_peaks
-            E0 = round(Int64, lines[ip, 1])
-            dE = round(Int64, lines[ip, 2])
-            guess = [maximum(E_loc[loc, E0-dE:E0+dE]),
-                        argmax(E_loc[loc, E0-dE:E0+dE])+E0-dE,
-                        1.0, 
-                        E_loc[loc, E0-dE], 0.0 ]
-            pf = curve_fit(gausslin, E0-dE:E0+dE, 
-                        E_loc[loc, E0-dE:E0+dE], 
-                        guess, 
-                        lower=[0, E0-dE-1, 0.8, -Inf, -Inf],
-                upper=[sum(E_loc[loc, E0-dE:E0+dE]), E0+dE+1, 3.0, Inf, Inf])
-            pferr = pf.param
-            try
-                pferr = standard_errors(pf)
-            catch
-            end
-            push!(Efit, pf.param[2])
-            push!(sfit, pf.param[3])
-        end
+        y = E_loc[loc, :]
 
-        lf = curve_fit(lin, Efit, lines[:, 1], [0.0, 1.0] )
-        qf = curve_fit(quad, Efit, lines[:, 1], [0.0, 1.0, 0.0] )
-        new_config["label"]["$loc"]["fcal"] = qf.param
+        x511 = argmax(y[100:5000]) + 100
+        ab = 511 / x511
+        ch1257 = round(Int, 1257 / ab)
+
+        x1257 = argmax(y[ch1257-100:ch1257+100]) + ch1257 - 100
+
+        pf511 = curve_fit(gausslin, x[x511-50:x511+50], y[x511-50:x511+50], 
+                       [5.0*y[x511], x511, 10.0, y[x511-50], 0.0])
+        ch511 = pf511.param[2]
+
+        guess = [5.0*y[x1257], x1257, 10.0, y[x1257-50], 0.0]
+        pf1257 = curve_fit(gausslin, x[x1257-50:x1257+50], 
+                           y[x1257-50:x1257+50], guess)
+        ch1257 = pf1257.param[2]
+        a2 = (1256.69 - 511.0) / (ch1257 - ch511)
+        a1 = 1256.69 -  a2 * ch1257
+
+        new_config["label"]["$loc"]["cal"] = [a1, a2]
     end
     new_config
 end

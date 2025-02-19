@@ -8,6 +8,9 @@ using Dates
 using StatsBase
 using HDF5
 using Infiltrator
+using ProgressMeter
+
+include("structs.jl")
 
 include("caendat.jl")
 
@@ -18,6 +21,8 @@ include("tools.jl")
 include("prescan.jl")
 
 include("edf.jl")
+
+include("eventbuilder.jl")
 
 include("scan.jl")
 export scan_run

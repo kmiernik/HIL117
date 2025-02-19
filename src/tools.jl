@@ -1,7 +1,7 @@
 """
     bareconfig(tomlfile)
     Create bare TOML config file
-
+    
 """
 function zeroconfig(tomlfile)
     fout = open(tomlfile, "w")
@@ -14,16 +14,19 @@ title = "Zero config for experiment HIL117
     DIA = [6, 7, 8, 9]
 
 [spectra]
-    dE = 1.0
-    Emax = 4096.0
-    dt = 1.0
-    tmax = 100.0
-    Mmax = 10
-    coin = [40.0, 0.0, 0.0]
-    bgo_low = 30.0
-    ge_low = 10.0
-    neda_low = 10.0
-    dia_low = 10.0
+	dE = 1.0
+	Emax = 4096.0
+    E2max = 2560.0
+	dt = 1.0
+	tmax = 100.0
+    dpid = 0.01
+    pidmax = 1.27
+	Mmax = 10
+	ge_low = 30.0
+	bgo_low = 30.0
+	neda_low = 10.0
+	dia_low = 100.0
+	beam_period = 73.89
 
 """
     print(fout, header)
@@ -130,7 +133,9 @@ function nicetoml(config, tomlfile, additional_comment="")
     print(fout, "\n")
 
     print(fout, "[pid]\n")
-    pidnames = ["En_low", "n_low", "n_high", "a_low", "a_high",
+    pidnames = ["g_low", "g_high", 
+                "n_low", "n_high", 
+                "a_low", "a_high",
                 "p_low", "p_high"]
     for par in pidnames
         print(fout, "\t$par = ", config["pid"][par], "\n")
@@ -167,41 +172,102 @@ function nicetoml(config, tomlfile, additional_comment="")
         print(fout, "\n")
     end
     close(fout)
-
-
 end
 
 
-"""
-    read_raw_data(filename; n_agg=-1)
-
-    Read raw data from `filename`. Returns vector of `Hits`.
-    If n_agg = -1 (default) whole file is read, otherwise n_agg
-    aggregates are read.
-"""
-function read_raw_data(filename; n_agg=-1)
-    fin = open(filename, "r")
-    config = TOML.parsefile("config/base.toml")
-    header = zeros(UInt32, 12)
-    read!(fin, header)
-
-    hits = Hit[]
-    n_read = 0
-    while true
-        try
-            append!(hits, read_aggregate(fin, config))
-            n_read += 1
-            if n_agg >0 && n_read >= n_agg
-                break
-            end
-        catch err
-            if isa(err, EOFError)
-                break
-            else
-                rethrow()
-            end
-        end
+function progress_dots(prefix, time_start, cpos, dpos,
+                       i_caen, block_caen, n_caen,
+                       i_dia, block_dia, n_dia)
+    print("\r", prefix)
+    for i in 1:i_caen-1
+        print("\u25C9") 
     end
-    return hits
+    if 0 < cpos < 0.25
+        if block_caen
+            print("\u25D4")
+            block_caen = false
+        else
+            print("\u25CB")
+            block_caen = true
+        end
+    elseif 0.25 <= cpos < 0.5
+        if block_caen
+            print("\u25D1")
+            block_caen = false
+        else
+            print("\u25D4")
+            block_caen = true
+        end
+    elseif 0.5 <= cpos < 0.75
+        if block_caen
+            print("\u25D5")
+            block_caen = false
+        else
+            print("\u25D1")
+            block_caen = true
+        end
+    elseif 0.75 <= cpos < 1.0
+        if block_caen
+            print("\u25CF")
+            block_caen = false
+        else
+            print("\u25D5")
+            block_caen = true
+        end
+    elseif cpos == 1.0
+        print("\u25C9")
+        block_caen = false
+    end
+    for i in 1:n_caen-i_caen
+        print("\u25CB")
+    end
+    print(" ")
+    for i in 1:i_dia-1
+        print("\u25C9") 
+    end
+    if 0 < dpos < 0.25
+        if block_dia
+            print("\u25D4")
+            block_dia = false
+        else
+            print("\u25CB")
+            block_dia = true
+        end
+    elseif 0.25 <= dpos < 0.5
+        if block_dia
+            print("\u25D1")
+            block_dia = false
+        else
+            print("\u25D4")
+            block_dia = true
+        end
+    elseif 0.5 <= dpos < 0.75
+        if block_dia
+            print("\u25D5")
+            block_dia = false
+        else
+            print("\u25D1")
+            block_dia = true
+        end
+    elseif 0.75 <= dpos < 1.0
+        if block_dia
+            print("\u25CF")
+            block_dia = false
+        else
+            print("\u25D5")
+            block_dia = true
+        end
+    elseif dpos == 1.0
+        print("\u25C9")
+        block_dia = false
+    end
+    for i in 1:n_dia-i_dia
+        print("\u25CB")
+    end
+    dtime = (Dates.Time(Dates.now()) - time_start)
+    @printf(" %-8.1f s ", dtime.value * 1e-9)
+
+    return block_caen, block_dia
 end
+
 

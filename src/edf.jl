@@ -113,15 +113,15 @@ end
 
 """
     event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
-                       valid_table, cal_table, fcal_table, shift_table,
-                       type_table, distance_table, pid_table)
+                       valid_table, cal_table, shift_table,
+                       type_table, distance_table, pidpars)
 
     Keeps last event in chunk, swaps it to the front,
     returns i_chunk (position of last unused hit in chunk)
 """
 function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
-                       valid_table, cal_table, fcal_table, shift_table,
-                       type_table, distance_table, pid_table)
+                       valid_table, cal_table, shift_table,
+                       type_table, distance_table, pidpars)
     d_target_neda = 1.0
     hits = [last_event;]
     sort!(chunk, by=x->(x.ts * 4 + x.tf / 256 - shift_table[x.board * 16 + x.ch + 1]))
@@ -134,58 +134,67 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
             continue
         end
         t = rawhit.ts * 4 + rawhit.tf / 256 - shift_table[loc]
-        if type_table[loc] == 1
-            #Ge
-            ige = round(Int64, loc / 2, RoundDown) + 1
-            E = quad(quadquad(
-                rawhit.E, cal_table[:, loc]) + (rand()-0.5), 
-                        fcal_table[:, ige])
+        if type_table[loc] != NEDA
+            E = lin(rawhit.E, cal_table[:, loc]) + rand() - 0.5
+        else
+            E = Float64(rawhit.E)
+        end
+        iE = round(Int64, E / specpars.dE, RoundDown)
+        if type_table[loc] == GE
             if E < specpars.ge_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(1)))
-        elseif type_table[loc] == 2
-            #BGO
+            push!(hits, Hit(UInt8(loc), E, t, 0.0, GAMMA))
+        elseif type_table[loc] == BGO
             if rawhit.E < specpars.bgo_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, UInt8(1)))
-        elseif type_table[loc] == 3
-            #NEDA
-            E = Float64(rawhit.E)
+            if (1 <= iE < specpars.Emax)
+                spectra.Eloc[iE, loc] += 1
+            end
+            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, GAMMA))
+        elseif type_table[loc] == NEDA
             if E < specpars.neda_low
                 continue
             end
             pid = (Float64(rawhit.qshort) + randn()) / E
+            ip = round(Int64, pid / specpars.dpid, RoundUp)
+            if (1 <= iE < specpars.Emax 
+                && 1 <= ip < specpars.pidmax / specpars.dpid)
+                spectra.neda_pid[iE, ip] += 1
+            end
             tof = t - t_last_neda_g
             itof = round(Int64, tof / specpars.dt, RoundDown)
-            type = UInt8(0)
-            if E > pid_table[1] && pid_table[2] <= pid < pid_table[3]
-                #Neutron
+            if (1 <= itof < specpars.tmax 
+                && 1 <= ip < specpars.pidmax / specpars.dpid)
+                spectra.neda_tof[itof, ip] += 1
+            end
+            if E > cal_table[2, loc] && pidpars.n_low <= pid < pidpars.n_high
                 E = (5227.121 * (d_target_neda / tof)^2) * 1000 + randn()
                 if E > 0.0 && !isinf(E) 
                     push!(hits, Hit(UInt8(loc), E, t_last_neda_g, 
-                                    tof, UInt8(2)))
+                                    tof, NEUTRON))
                 end
-            else 
-                # Gamma
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(1)))
+            elseif (E > cal_table[1, loc] 
+                    && pidpars.g_low <= pid < pidpars.g_high)
+                push!(hits, Hit(UInt8(loc), E, t, 0.0, GAMMA))
                 t_last_neda_g = t
             end
-        elseif type_table[loc] == 4
-            #DIAMANT
+        elseif type_table[loc] == DIAMANT
             E = Float64(rawhit.E)
             T = Float64(rawhit.qshort)
             pid = (T / E 
                 - cal_table[1, loc] / E^2 
                 - cal_table[2, loc] + 0.5)
-            type = UInt8(0)
-            if pid_table[4] < pid <= pid_table[5]
-                # Alpha
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(4)))
-            elseif pid_table[6] < pid <= pid_table[7]
-                # Proton
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, UInt8(3)))
+            ip = round(Int64, pid / specpars.dpid, RoundUp)
+            if (1 <= iE < specpars.Emax 
+                && 1 <= ip < specpars.pidmax / specpars.dpid)
+                spectra.dia_pid[iE, ip] += 1
+            end
+            if pidpars.a_low < pid <= pidpars.a_high
+                push!(hits, Hit(UInt8(loc), E, t, 0.0, ALPHA))
+            elseif pidpars.p_low < pid <= pidpars.p_high
+                push!(hits, Hit(UInt8(loc), E, t, 0.0, PROTON))
             end
         end
     end
@@ -207,18 +216,18 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
             alphas = 0
             for j in 1:M
                 jloc = hits[event[j]].loc
-                if type_table[jloc] == 1
+                if type_table[jloc] == GE
                     ges += 1
-                elseif type_table[jloc] == 3
-                    if hits[event[j]].pid == 1
+                elseif type_table[jloc] == NEDA
+                    if hits[event[j]].pid == GAMMA
                         gammas += 1
-                    elseif hits[event[j]].pid == 2
+                    elseif hits[event[j]].pid == NEUTRON
                         neutrons +=1
                     end
-                elseif type_table[jloc] == 4
-                    if hits[event[j]].pid == 3
+                elseif type_table[jloc] == DIAMANT
+                    if hits[event[j]].pid == PROTON
                         protons +=1
-                    elseif hits[event[j]].pid == 4
+                    elseif hits[event[j]].pid == ALPHA
                         alphas += 1
                     end
                 end
@@ -280,7 +289,7 @@ function edf_scan_to_spectra(filename, configfile, fileout)
         end
     end
 
-    type_table = zeros(UInt8, last_label)
+    type_table = zeros(DetectorType, last_label)
     valid_table = zeros(Bool, last_label)
 
     for label in keys(config["label"])
@@ -291,13 +300,13 @@ function edf_scan_to_spectra(filename, configfile, fileout)
             valid_table[loc] = true
         end
         if config["label"]["$loc"]["type"] == "Ge"
-            type_table[loc] = 1
+            type_table[loc] = GE
         elseif config["label"]["$loc"]["type"] == "BGO"
-            type_table[loc] = 2
+            type_table[loc] = BGO
         elseif config["label"]["$loc"]["type"] == "NEDA"
-            type_table[loc] = 3
+            type_table[loc] = NEDA
         elseif config["label"]["$loc"]["type"] == "DIAMANT"
-            type_table[loc] = 4
+            type_table[loc] = DIAMANT
         end
     end
     
@@ -335,7 +344,7 @@ function edf_scan_to_spectra(filename, configfile, fileout)
         gehits = EDFHit[]
         for i in 1:head.M
             hit = read(fin, EDFHit)
-            if type_table[hit.loc] == 1
+            if type_table[hit.loc] == GE
                 push!(gehits, hit)
             end
         end

@@ -807,21 +807,27 @@ function test_neda(dir_name, config::Dict)
     Smax = 128
     neda = zeros(Int64, length(neda_locs), Lmax, Smax)
 
+    totsize = 0
+    for filename in files
+        totsize += filesize(filename)
+    end
+
+    prog = Progress(totsize; dt=1.0, desc="Calculating NEDA PID spectra",
+                    barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:black)
+    donesize = 0
+
     i_file = 0
     for filename in files
         time_start = Dates.Time(Dates.now())
         i_file += 1
         fin = open(filename, "r")
         name = split(filename, ['/'])[end]
-        println("\nProcessing file $name  $i_file / $(length(files))")
 
         if parse(Int64, split(filename, ['/', '_', '.'])[end-1]) == 0
             header = zeros(UInt32, 12)
             read!(fin, header)
-            println(header)
             agava_ts = header[4] % UInt64
             agava_ts = agava_ts << 32 + header[5] % UInt64
-            @printf("AGAVA: %x\n", agava_ts)
         end
 
         i_hit = 0
@@ -838,6 +844,9 @@ function test_neda(dir_name, config::Dict)
                 if loc > last_label
                     continue
                 end
+                if i_hit % 10_000_000 == 0
+                    update!(prog, donesize + position(fin))
+                end
                 if loc in neda_locs
                     ineda = loc - 32
                     L = hit.E
@@ -849,6 +858,7 @@ function test_neda(dir_name, config::Dict)
                 end
             end
         end
+        donesize += filesize(filename)
     end
     println()
     neda
@@ -1083,4 +1093,66 @@ function dt_trig(data_dir, configfile; ref_label=93, n_files=1, t_max=1_000_000)
         close(fin)
     end
     dt
+end
+
+
+function neda_lims(neda, config; binsize=8, thr_g=80, thr_n=16)
+    new_config = copy(config)
+    for loc in 34:84
+        E = collect(1:2048) .- 0.5
+        pid = collect(0.0:0.01:1.27) .+ 0.005
+    
+        yn = rebin(vec(sum(neda[loc-32, :, 50:69], dims=2)), binsize)[:, 1]
+        yg = rebin(vec(sum(neda[loc-32, :, 71:95], dims=2)), binsize)[:, 1]
+        dyn = yn[2:end] .- yn[1:end-1]
+        dyg = yg[2:end] .- yg[1:end-1]
+
+        zcn = -1
+        zcg = -1
+        if maximum(yg[1:round(Int, 80/binsize)]) > thr_g
+            # minimum mode
+            for i in round(Int, 80/binsize):round(Int, 2000/binsize)
+                if yg[i] > thr_g && dyg[i] < 0 && dyg[i+1] > 0
+                    a = (dyg[i+1] - dyg[i]) / binsize
+                    b = dyg[i] - ((i-1)*binsize + (binsize-1)/2) * a
+                    zcg = -b/a
+                    break
+                end
+            end
+        else
+            # thr_geshold mode
+            for i in 1:round(Int, 2000/binsize)
+                if zcg < 0 && yg[i] > thr_g && yg[i+1] > thr_g
+                    zcg = (i-1)*binsize + (binsize-1)/2
+                    break
+                end
+            end
+        end
+        if maximum(yn[1:round(Int, 80/binsize)]) > thr_n
+            # minimum mode
+            for i in round(Int, 80/binsize):round(Int, 2000/binsize)
+                if yn[i] > thr_n && dyn[i] < 0 && dyn[i+1] > 0
+                    a = (dyn[i+1] - dyn[i]) / binsize
+                    b = dyn[i] - ((i-1)*binsize + (binsize-1)/2) * a
+                    zcn = -b/a
+                    break
+                end
+            end
+        else
+            # thr_neshold mode
+            for i in 1:round(Int, 2000/binsize)
+                if yn[i] > thr_n && yn[i+1] > thr_n
+                    zcn = (i-1)*binsize + (binsize-1)/2
+                    break
+                end
+            end
+        end
+
+        # Manual intervention!
+        if loc == 82
+            zcg = 80.0
+        end
+        new_config["label"]["$loc"]["cal"] = [zcg, zcn]
+    end  
+    new_config
 end
