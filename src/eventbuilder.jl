@@ -6,7 +6,7 @@
     Keeps last event in chunk, swaps it to the front,
     returns i_chunk (position of last unused hit in chunk)
 """
-function event_builder!(chunk, last_event, spectra, specpars, t_event;
+function event_builder!(chunk, last_event, eventpars, specpars, spectra::NamedTuple;
                        valid_table, cal_table, shift_table,
                        type_table, distance_table, pidpars)
     d_target_neda = 1.0
@@ -21,27 +21,30 @@ function event_builder!(chunk, last_event, spectra, specpars, t_event;
             continue
         end
         t = rawhit.ts * 4 + rawhit.tf / 256 - shift_table[loc]
+        if type_table[loc] !== NEDA
+            t += eventpars.t_delay
+        end
         if type_table[loc] == GE
             E = lin(rawhit.E, cal_table[:, loc]) + 0.5 * rand() - 0.25
         else
             E = Float64(rawhit.E)
         end
-        iE = round(Int64, E / specpars.dE, RoundDown)
+        iE = round(Int64, E / specpars.dE, RoundUp)
         if (1 <= iE < specpars.Emax)
             spectra.Eloc[iE, loc] += 1
         end
         if type_table[loc] == GE
-            if E < specpars.ge_low
+            if E < eventpars.ge_low
                 continue
             end
             push!(hits, Hit(UInt8(loc), E, t, 0.0, GAMMA))
         elseif type_table[loc] == BGO
-            if rawhit.E < specpars.bgo_low
+            if rawhit.E < eventpars.bgo_low
                 continue
             end
             push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, GAMMA))
         elseif type_table[loc] == NEDA
-            if E < specpars.neda_low
+            if E < eventpars.neda_low
                 continue
             end
             pid = (Float64(rawhit.qshort) + randn()) / E
@@ -51,7 +54,7 @@ function event_builder!(chunk, last_event, spectra, specpars, t_event;
                 spectra.neda_pid[iE, ip] += 1
             end
             tof = t - t_last_neda_g
-            itof = round(Int64, tof / specpars.dt, RoundDown)
+            itof = round(Int64, tof / specpars.dt, RoundUp)
             if (1 <= itof < specpars.tmax 
                 && 1 <= ip < specpars.pidmax / specpars.dpid)
                 spectra.neda_tof[itof, ip] += 1
@@ -68,6 +71,10 @@ function event_builder!(chunk, last_event, spectra, specpars, t_event;
                 t_last_neda_g = t
             end
         elseif type_table[loc] == DIAMANT
+            if E < eventpars.dia_low
+                continue
+            end
+            t += (rand() - 0.5) * 5.0 
             T = Float64(rawhit.qshort)
             pid = (T / E 
                 - cal_table[1, loc] / E^2 
@@ -89,117 +96,40 @@ function event_builder!(chunk, last_event, spectra, specpars, t_event;
 
     event = [1]
     for i in 2:n_hits
-        if hits[i].t - hits[event[1]].t < t_event
-            push!(event, i)
-        else
-            Mraw = length(event)
-            scattering!(event, hits, type_table, distance_table, specpars)
-            M = length(event)
-            ges = 0
-            gammas = 0
-            neutrons = 0
-            protons = 0
-            alphas = 0
-            for j in 1:M
-                jloc = hits[event[j]].loc
-                jE = round(Int64, hits[event[j]].E / specpars.dE, RoundDown)
-                jt = round(Int64, 
-                           (hits[event[j]].t - hits[event[1]].t) / specpars.dt,
-                           RoundDown) + 1
-                if 1 <= jt <= specpars.tmax
-                    spectra.tloc[jt, jloc] += 1
-                end
-                if type_table[jloc] == GE
-                    ges += 1
-                    if 1 <= jE <= specpars.Emax
-                        spectra.gP[jE, 1] += 1
-                    end
-                elseif type_table[jloc] == NEDA
-                    if hits[event[j]].pid == GAMMA
-                        gammas += 1
-                    elseif hits[event[j]].pid == NEUTRON
-                        neutrons +=1
-                        if 1 <= jE <= specpars.Emax
-                            spectra.partE[jE, 2] += 1
-                        end
-                    end
-                elseif type_table[jloc] == DIAMANT
-                    if hits[event[j]].pid == PROTON
-                        protons +=1
-                        if 1 <= jE <= specpars.Emax
-                            spectra.partE[jE, 3] += 1
-                        end
-                    elseif hits[event[j]].pid == ALPHA
-                        alphas += 1
-                        if 1 <= jE <= specpars.Emax
-                            spectra.partE[jE, 4] += 1
-                        end
-                    end
-                end
+        closeevent = false
+        if type_table[hits[i].loc] == NEDA && hits[i].pid == GAMMA
+            if hits[i].t - hits[event[1]].t < eventpars.neda_g_dt
+                push!(event, i)
+            else
+                closeevent = true
             end
-            for (itype, m) in enumerate([Mraw, M, ges, gammas, neutrons,
-                                         protons, alphas])
-                iM = ifelse(m < specpars.Mmax-2, m+1, specpars.Mmax-1)
-                spectra.MP[iM, itype] += 1
+        elseif type_table[hits[i].loc] == NEDA && hits[i].pid == NEUTRON
+            if hits[i].t - hits[event[1]].t < eventpars.neda_n_dt
+                push!(event, i)
+            else
+                closeevent = true
             end
-            if ges < 1
-                event = [i]
-                continue
+        elseif hits[i].pid == PROTON || hits[i].pid == ALPHA
+            if hits[i].t - hits[event[1]].t < eventpars.dia_dt
+                push!(event, i)
+            else
+                closeevent = true
             end
-
-            for j in 1:M
-                jloc = hits[event[j]].loc
-                if type_table[jloc] != GE
-                    continue
-                end
-                jE = round(Int64, hits[event[j]].E / specpars.dE, RoundDown)
-                if jE < 1 || jE > specpars.Emax
-                    continue
-                end
-                if neutrons == 0 && protons == 0 && alphas == 0
-                    spectra.gP[jE, 1] += 1
-                end
-                if neutrons > 0
-                    spectra.gP[jE, 2] += 1
-                end
-                if protons > 0
-                    spectra.gP[jE, 3] += 1
-                end
-                if alphas > 0
-                    spectra.gP[jE, 4] += 1
-                end
-                if 1 <= M < specpars.Mmax
-                    spectra.gM[jE, M] += 1
-                else
-                    spectra.gM[jE, specpars.Mmax-1] += 1
-                end
-                if 1 <= jE <= specpars.E2max 
-                    for k in j+1:M
-                        kloc = hits[event[k]].loc
-                        if type_table[kloc] != GE
-                            continue
-                        end
-                        kE = round(Int64, 
-                                   hits[event[k]].E / specpars.dE, RoundDown)
-                        if 1 <= kE <= specpars.E2max
-                            spectra.gg[jE, kE] += 1
-                            spectra.gg[kE, jE] += 1
-                            if protons > 0
-                                spectra.gg_proton[jE, kE] += 1
-                                spectra.gg_proton[kE, jE] += 1
-                            end
-                            if alphas > 0
-                                spectra.gg_alpha[jE, kE] += 1
-                                spectra.gg_alpha[kE, jE] += 1
-                            end
-                            if alphas == 0
-                                spectra.gg_no_alpha[jE, kE] += 1
-                                spectra.gg_no_alpha[kE, jE] += 1
-                            end
-                        end
-                    end
-                end
+        elseif type_table[hits[i].loc] == GE && hits[i].pid == GAMMA
+            if hits[i].t - hits[event[1]].t < eventpars.ge_dt
+                push!(event, i)
+            else
+                closeevent = true
             end
+        elseif type_table[hits[i].loc] ==  BGO
+            if hits[i].t - hits[event[1]].t < eventpars.bgo_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        end
+        if closeevent
+            update_spectra!(event, hits, spectra, type_table, distance_table, specpars)
             event = [i]
         end
     end
@@ -214,7 +144,7 @@ end
 
 
 """
-    scattering!(event, hits, type_table, distance_table, specpars)
+    scattering!(event, hits, type_table, distance_table)
 
     Perform Compton suppresion and scattering suppresion on event_hits
     * type_table - table of types of detectors (on given location)
@@ -222,7 +152,7 @@ end
     * specpars - SpecPars struct
 
 """
-function scattering!(event, hits, type_table, distance_table, specpars)
+function scattering!(event, hits, type_table, distance_table)
     M = length(event)
 
     del_list = Int64[]
@@ -264,4 +194,116 @@ function scattering!(event, hits, type_table, distance_table, specpars)
         end
     end
     deleteat!(event, sort(del_list))
+end
+
+
+function update_spectra!(event, hits, spectra::NamedTuple, type_table, distance_table, specpars)
+    Mraw = length(event)
+    scattering!(event, hits, type_table, distance_table)
+    M = length(event)
+    ges = 0
+    gammas = 0
+    neutrons = 0
+    protons = 0
+    alphas = 0
+    for j in 1:M
+        jloc = hits[event[j]].loc
+        jE = round(Int64, hits[event[j]].E / specpars.dE, RoundUp)
+        jt = round(Int64, 
+                    (hits[event[j]].t - hits[event[1]].t) / specpars.dt,
+                    RoundUp)
+        if 1 <= jt <= specpars.tmax
+            spectra.tloc[jt, jloc] += 1
+        end
+        if type_table[jloc] == GE
+            ges += 1
+            if 1 <= jE <= specpars.Emax
+                spectra.gP[jE, 1] += 1
+            end
+        elseif type_table[jloc] == NEDA
+            if hits[event[j]].pid == GAMMA
+                gammas += 1
+            elseif hits[event[j]].pid == NEUTRON
+                neutrons +=1
+                if 1 <= jE <= specpars.Emax
+                    spectra.partE[jE, 2] += 1
+                end
+            end
+        elseif type_table[jloc] == DIAMANT
+            if hits[event[j]].pid == PROTON
+                protons +=1
+                if 1 <= jE <= specpars.Emax
+                    spectra.partE[jE, 3] += 1
+                end
+            elseif hits[event[j]].pid == ALPHA
+                alphas += 1
+                if 1 <= jE <= specpars.Emax
+                    spectra.partE[jE, 4] += 1
+                end
+            end
+        end
+    end
+    for (itype, m) in enumerate([Mraw, M, ges, gammas, neutrons,
+                                    protons, alphas])
+        iM = ifelse(m < specpars.Mmax-2, m+1, specpars.Mmax-1)
+        spectra.MP[iM, itype] += 1
+    end
+    if ges < 1
+        return 0
+    end
+
+    for j in 1:M
+        jloc = hits[event[j]].loc
+        if type_table[jloc] != GE
+            continue
+        end
+        jE = round(Int64, hits[event[j]].E / specpars.dE, RoundUp)
+        if jE < 1 || jE > specpars.Emax
+            continue
+        end
+        if neutrons == 0 && protons == 0 && alphas == 0
+            spectra.gP[jE, 1] += 1
+        end
+        if neutrons > 0
+            spectra.gP[jE, 2] += 1
+        end
+        if protons > 0
+            spectra.gP[jE, 3] += 1
+        end
+        if alphas > 0
+            spectra.gP[jE, 4] += 1
+        end
+        if 1 <= M < specpars.Mmax
+            spectra.gM[jE, M] += 1
+        else
+            spectra.gM[jE, specpars.Mmax-1] += 1
+        end
+        if 1 <= jE <= specpars.E2max 
+            for k in j+1:M
+                kloc = hits[event[k]].loc
+                if type_table[kloc] != GE
+                    continue
+                end
+                kE = round(Int64, 
+                            hits[event[k]].E / specpars.dE, RoundUp)
+                if 1 <= kE <= specpars.E2max
+                    spectra.gg[jE, kE] += 1
+                    spectra.gg[kE, jE] += 1
+                    if protons > 0
+                        spectra.gg_proton[jE, kE] += 1
+                        spectra.gg_proton[kE, jE] += 1
+                    end
+                    if alphas > 0
+                        spectra.gg_alpha[jE, kE] += 1
+                        spectra.gg_alpha[kE, jE] += 1
+                    end
+                    if alphas == 0
+                        spectra.gg_no_alpha[jE, kE] += 1
+                        spectra.gg_no_alpha[kE, jE] += 1
+                    end
+                end
+            end
+        end
+    end
+    return 0
 end

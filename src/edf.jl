@@ -149,9 +149,6 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
             if rawhit.E < specpars.bgo_low
                 continue
             end
-            if (1 <= iE < specpars.Emax)
-                spectra.Eloc[iE, loc] += 1
-            end
             push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, GAMMA))
         elseif type_table[loc] == NEDA
             if E < specpars.neda_low
@@ -159,16 +156,7 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
             end
             pid = (Float64(rawhit.qshort) + randn()) / E
             ip = round(Int64, pid / specpars.dpid, RoundUp)
-            if (1 <= iE < specpars.Emax 
-                && 1 <= ip < specpars.pidmax / specpars.dpid)
-                spectra.neda_pid[iE, ip] += 1
-            end
             tof = t - t_last_neda_g
-            itof = round(Int64, tof / specpars.dt, RoundDown)
-            if (1 <= itof < specpars.tmax 
-                && 1 <= ip < specpars.pidmax / specpars.dpid)
-                spectra.neda_tof[itof, ip] += 1
-            end
             if E > cal_table[2, loc] && pidpars.n_low <= pid < pidpars.n_high
                 E = (5227.121 * (d_target_neda / tof)^2) * 1000 + randn()
                 if E > 0.0 && !isinf(E) 
@@ -187,10 +175,6 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
                 - cal_table[1, loc] / E^2 
                 - cal_table[2, loc] + 0.5)
             ip = round(Int64, pid / specpars.dpid, RoundUp)
-            if (1 <= iE < specpars.Emax 
-                && 1 <= ip < specpars.pidmax / specpars.dpid)
-                spectra.dia_pid[iE, ip] += 1
-            end
             if pidpars.a_low < pid <= pidpars.a_high
                 push!(hits, Hit(UInt8(loc), E, t, 0.0, ALPHA))
             elseif pidpars.p_low < pid <= pidpars.p_high
@@ -206,55 +190,7 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
         if hits[i].t - hits[event[1]].t < t_event
             push!(event, i)
         else
-            Mraw = length(event)
-            scattering!(event, hits, type_table, distance_table, specpars)
-            M = length(event)
-            ges = 0
-            gammas = 0
-            neutrons = 0
-            protons = 0
-            alphas = 0
-            for j in 1:M
-                jloc = hits[event[j]].loc
-                if type_table[jloc] == GE
-                    ges += 1
-                elseif type_table[jloc] == NEDA
-                    if hits[event[j]].pid == GAMMA
-                        gammas += 1
-                    elseif hits[event[j]].pid == NEUTRON
-                        neutrons +=1
-                    end
-                elseif type_table[jloc] == DIAMANT
-                    if hits[event[j]].pid == PROTON
-                        protons +=1
-                    elseif hits[event[j]].pid == ALPHA
-                        alphas += 1
-                    end
-                end
-            end
-            if ges > 0
-                write(edffile, EDFHeader(UInt8(Mraw), UInt8(M), UInt8(ges),
-                                    UInt8(gammas), UInt8(neutrons),
-                                    UInt8(protons), UInt8(alphas)))
-                for j in 1:M
-                    Eedf = zero(UInt16)
-                    if hits[event[j]].E > 6553.5
-                        Eedf = typemax(UInt16)
-                    else
-                        # 0.1 keV unit 100 keV -> 1000, max is 6553.5 keV
-                        Eedf = round(UInt16, hits[event[j]].E * 10)
-                    end
-                    tedf = zero(UInt16)
-                    if hits[event[j]].t > 655.35
-                        tedf = typemax(UInt16)
-                    else
-                        # 10 ps unit 10.15 ns -> 1015, max is 655.35 ns
-                        tedf = round(UInt16, hits[event[j]].t * 100)
-                    end
-                    write(edffile, EDFHit(UInt8(hits[event[j]].loc),
-                                        UInt8(hits[event[j]].pid), Eedf, tedf))
-                end
-            end
+            update_spectra!(event, hits, edffile, type_table, distance_table, specpars)
             event = [i]
         end
     end
@@ -265,6 +201,61 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
     end
     
     return left_hits
+end
+
+
+
+function update_spectra!(event, hits, edffile::IO, type_table, distance_table, specpars)
+    Mraw = length(event)
+    scattering!(event, hits, type_table, distance_table)
+    M = length(event)
+    ges = 0
+    gammas = 0
+    neutrons = 0
+    protons = 0
+    alphas = 0
+    for j in 1:M
+        jloc = hits[event[j]].loc
+        if type_table[jloc] == GE
+            ges += 1
+        elseif type_table[jloc] == NEDA
+            if hits[event[j]].pid == GAMMA
+                gammas += 1
+            elseif hits[event[j]].pid == NEUTRON
+                neutrons +=1
+            end
+        elseif type_table[jloc] == DIAMANT
+            if hits[event[j]].pid == PROTON
+                protons +=1
+            elseif hits[event[j]].pid == ALPHA
+                alphas += 1
+            end
+        end
+    end
+    if ges > 0
+        write(edffile, EDFHeader(UInt8(Mraw), UInt8(M), UInt8(ges),
+                            UInt8(gammas), UInt8(neutrons),
+                            UInt8(protons), UInt8(alphas)))
+        for j in 1:M
+            Eedf = zero(UInt16)
+            if hits[event[j]].E > 6553.5
+                Eedf = typemax(UInt16)
+            else
+                # 0.1 keV unit 100 keV -> 1000, max is 6553.5 keV
+                Eedf = round(UInt16, hits[event[j]].E * 10)
+            end
+            tedf = zero(UInt16)
+            if hits[event[j]].t > 655.35
+                tedf = typemax(UInt16)
+            else
+                # 10 ps unit 10.15 ns -> 1015, max is 655.35 ns
+                tedf = round(UInt16, hits[event[j]].t * 100)
+            end
+            write(edffile, EDFHit(UInt8(hits[event[j]].loc),
+                                UInt8(hits[event[j]].pid), Eedf, tedf))
+        end
+    end
+    return 0
 end
 
 

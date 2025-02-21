@@ -872,7 +872,6 @@ function dia_banana_fit(dia_dir_name, configfile::String;
 end
 
 """
-    Read both caen and dia files
 """
 function dia_banana_fit(dia_dir_name, config::Dict; 
                         n_files=3, c_lim=3000, E_lim=3000, arr_mode=false,
@@ -1155,4 +1154,217 @@ function neda_lims(neda, config; binsize=8, thr_g=80, thr_n=16)
         new_config["label"]["$loc"]["cal"] = [zcg, zcn]
     end  
     new_config
+end
+
+
+
+"""
+    Δt between group of detectors (Ge, Neda, Diamant)
+
+"""
+function dt_groups(data_dir, configfile; n_files=2, dt_max=1023.0, dt=1.0, Emin=100, chunk_size=100_000)
+    config = TOML.parsefile(configfile)
+
+    last_label = 0
+    for loc in keys(config["label"])
+        if parse(Int64, loc) > last_label && config["label"]["$loc"]["valid"] 
+            last_label = parse(Int64, loc)
+        end
+    end
+
+    type_table, valid_table, cal_table, shift_table = config_to_tables(config, last_label)
+    
+    dtgroup = zeros(Int64, 4, length(0:dt:dt_max))
+    if n_files == 0
+        @warn "No files to be prescanned"
+        return dtgroup
+    end
+
+    files_caen = readdir(data_dir, join=true)
+    filter!(x->endswith(x, ".caendat"), files_caen)
+
+    if length(files_caen) < 1
+        @warn "No caendat files found"
+        return 0
+    end
+
+    files_dia = readdir(data_dir, join=true)
+    filter!(x->split(x, '.')[2] == "dat", files_dia)
+    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+
+    if n_files > length(files_caen)
+        @warn "There are no $n_files caendat file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
+        n_files = length(files_caen)
+    end
+
+    if n_files > length(files_caen) && n_files > length(files_dia)
+        n_new = maximum(length(files_caen), length(files_dia))
+        @warn "There are no both $n_files caendat and diamant file(s) to be prescanned, using $(n_new) file(s) instead"
+        n_files = n_new
+    elseif n_files > length(files_dia)
+        @warn "There are no $n_files diamant file(s) to be prescanned"
+    elseif n_files > length(files_caen)
+        @warn "There are no $n_files caendat file(s) to be prescanned"
+    end
+
+    cfin = open(files_caen[1], "r")
+    i_caen = 1
+    if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
+        header = zeros(UInt32, 12)
+        read!(cfin, header)
+        agava_ts = header[4] % UInt64
+        agava_ts = agava_ts << 32 + header[5] % UInt64
+    else
+        @warn "Could not read agava time stamp"
+        return 0
+    end
+    csize = filesize(files_caen[1])
+
+    caen_good = true
+    dia_good = true
+    i_dia = 1
+    if length(files_dia) > 0
+        dfin = open(files_dia[1], "r")
+        dsize = filesize(files_dia[1])
+    else
+        @warn "No diamant files found"
+        dfin = IOBuffer()
+        close(dfin)
+        dsize = 0
+        dia_good = false
+        i_dia = n_files 
+    end
+
+    totsize = 0
+    donesize = 0
+    for filename in files_caen[1:n_files]
+        totsize += filesize(filename)
+    end
+    n_dia = ifelse(length(files_dia) >= n_files, n_files, length(files_dia))
+    for filename in files_dia[1:n_dia]
+        totsize += filesize(filename)
+    end
+    
+    prog = Progress(totsize; dt=1.0, desc="\tΔt groups ",
+                     barlen=30, color=:green)
+    t_caen = 0
+    t_dia = 0
+
+    last_ge = 0
+    last_bgo = 0
+    last_neda = 0
+    last_dia = 0
+
+    i_chunk = 0
+    chunk = zeros(RawHit, chunk_size)
+    while caen_good || dia_good
+
+        hits = RawHit[]
+        if (caen_good && t_dia >= t_caen) || !(dia_good)
+            try
+                hits = read_aggregate(cfin, config)
+            catch err
+                throw(err)
+            end
+            if size(hits)[1] > 0
+                t_caen = hits[end].ts
+            end
+        elseif (dia_good && t_dia < t_caen) || !(caen_good)
+            try
+                hits = read_diahit(dfin, agava_ts, 100)
+            catch err
+                if !eof(dfin)
+                    throw(err)
+                end
+            end
+            if size(hits)[1] > 0
+                t_dia = hits[end].ts
+            end
+        end
+
+        for hit in hits
+            i_chunk += 1
+
+            if i_chunk > chunk_size
+                current_pos = 0
+                if isopen(cfin)
+                    current_pos += position(cfin)
+                end
+                if isopen(dfin)
+                    current_pos += position(dfin)
+                end
+                update!(prog, donesize + current_pos)
+                sort!(chunk, by=x->(x.ts * 4 + x.tf / 256 - shift_table[x.board * 16 + x.ch + 1]))
+
+                for chit in chunk
+                    loc = chit.board * 16 + chit.ch + 1
+                    if !valid_table[loc]
+                        continue
+                    end
+                    if chit.E < Emin
+                        continue
+                    end
+                    t = chit.ts * 4 + chit.tf / 256 - shift_table[loc]
+                    if type_table[loc] == GE
+                        tl = t - last_ge
+                        if 0 < tl <= dt_max
+                            it = round(Int64, tl / dt, RoundUp) 
+                            dtgroup[1, it] += 1
+                        end
+                        last_ge = t
+                    elseif type_table[loc] == BGO
+                        tl = t - last_bgo
+                        if 0 < tl <= dt_max
+                            it = round(Int64, tl / dt, RoundUp) 
+                            dtgroup[2, it] += 1
+                        end
+                        last_bgo = t
+                    elseif type_table[loc] == NEDA
+                        tl = t - last_neda
+                        if 0 < tl <= dt_max
+                            it = round(Int64, tl / dt, RoundUp) 
+                            dtgroup[3, it] += 1
+                        end
+                        last_neda = t
+                    elseif type_table[loc] == DIAMANT 
+                        tl = t - last_dia
+                        if 0 < tl <= dt_max
+                            it = round(Int64, tl / dt, RoundUp) 
+                            dtgroup[4, it] += 1
+                        end
+                        last_dia = t
+                    end
+                end
+                i_chunk = 0
+            else
+                chunk[i_chunk] = hit
+            end
+
+        end
+
+        if eof(cfin)
+            close(cfin)
+            if i_caen < length(files_caen) && i_caen < n_files
+                donesize += filesize(files_caen[i_caen])
+                i_caen += 1
+                cfin = open(files_caen[i_caen], "r")
+                csize = filesize(files_caen[i_caen])
+            else
+                caen_good = false
+            end
+        end
+        if eof(dfin)
+            close(dfin)
+            if i_dia < length(files_dia) && i_dia < n_files
+                donesize += filesize(files_dia[i_dia])
+                i_dia += 1
+                dfin = open(files_dia[i_dia], "r")
+                dsize = filesize(files_dia[i_dia])
+            else
+                dia_good = false
+            end
+        end
+    end
+    update!(prog, totsize)
+    dtgroup
 end

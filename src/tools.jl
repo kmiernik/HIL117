@@ -16,17 +16,34 @@ title = "Zero config for experiment HIL117
 [spectra]
 	dE = 1.0
 	Emax = 4096.0
-    E2max = 2560.0
+	E2max = 2560.0
 	dt = 1.0
 	tmax = 100.0
-    dpid = 0.01
-    pidmax = 1.27
+	dpid = 0.01
+	pidmax = 1.27
 	Mmax = 10
+
+[event]
 	ge_low = 30.0
 	bgo_low = 30.0
 	neda_low = 10.0
 	dia_low = 100.0
-	beam_period = 73.89
+	beam_period = 74.0
+	ge_dt = 148.0
+	bgo_dt = 74.0
+	neda_g_dt = 10.0
+	neda_n_dt = 37.0
+	dia_dt = 37.0
+
+[pid]
+	g_low = 0.71
+	g_high = 0.95
+	n_low = 0.5
+	n_high = 0.69
+	a_low = 0.42
+	a_high = 0.56
+	p_low = 0.56
+	p_high = 0.67
 
 """
     print(fout, header)
@@ -125,10 +142,17 @@ function nicetoml(config, tomlfile, additional_comment="")
 
     print(fout, "[spectra]\n")
     parnames = ["dE", "Emax", "E2max", "dt", "tmax", "dpid", "pidmax",
-                "Mmax", "ge_low", "bgo_low", "neda_low", "dia_low",
-                "beam_period"]
+                "Mmax"]
     for par in parnames
         print(fout, "\t$par = ", config["spectra"][par], "\n")
+    end
+    print(fout, "\n")
+
+    print(fout, "[event]\n")
+    parnames = ["ge_low", "bgo_low", "neda_low", "dia_low", "beam_period", 
+                "ge_dt", "bgo_dt", "neda_g_dt", "neda_n_dt", "dia_dt"]
+    for par in parnames
+        print(fout, "\t$par = ", config["event"][par], "\n")
     end
     print(fout, "\n")
 

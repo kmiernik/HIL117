@@ -11,15 +11,23 @@ comment = ""
 	Emax = 4096.0
 	E2max = 2560.0
 	dt = 1.0
-	tmax = 100.0
+	tmax = 255.0
 	dpid = 0.01
 	pidmax = 1.27
 	Mmax = 10
+
+[event]
 	ge_low = 30.0
-	bgo_low = 30.0
-	neda_low = 10.0
+	bgo_low = 2.0
+	neda_low = 70.0
 	dia_low = 100.0
-	beam_period = 73.89
+	beam_period = 74.0
+	ge_dt = 148.0
+	bgo_dt = 74.0
+	neda_g_dt = 10.0
+	neda_n_dt = 37.0
+	dia_dt = 148.0
+	t_delay = 37.0
 
 [pid]
 	g_low = 0.71
@@ -30,6 +38,10 @@ comment = ""
 	a_high = 0.56
 	p_low = 0.56
 	p_high = 0.67
+
+[calibration]
+	E1 = 511.0
+	E2 = 1256.69
 
 [label.1]
 	type = "Ge"

@@ -313,7 +313,7 @@ end
     Returns 0 if no errors, 1 in case of error (along with warn message)
 """
 function scan_run(data_dir, config::Dict, prefix;
-                    chunk_size=10_000, dia_buf=100, n_prescan=2, edfmode=false)
+                    chunk_size=100_000, dia_buf=100, n_prescan=2, edfmode=false)
 
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
@@ -330,8 +330,11 @@ function scan_run(data_dir, config::Dict, prefix;
         print("    \u25E6 Calculating shifts, calibration, and period (")
         config = find_shifts(t_loc, config)
         config = find_cal(E_loc, config)
-        config = find_period(t_loc, config)
-        @printf("%.3f ns)\n", config["spectra"]["beam_period"])
+        calc_period = find_period(t_loc)
+        @printf("%.3f ns)\n", calc_period)
+        if abs(config["event"]["beam_period"] - calc_period) > 1.0
+            @warn "Calculated period is different than one in config!"
+        end
     end
     nicetoml(config, @sprintf("config_%03d.toml", run_number))
 
@@ -349,8 +352,8 @@ function scan_run(data_dir, config::Dict, prefix;
     end
 
     println("\u25CD Scanning run")
-    beam_period = config["spectra"]["beam_period"]
     specpars = SpectraPars(config)
+    eventpars = EventPars(config)
     if edfmode
         edffile = open(prefix * ".edf", "w")
         println("    \u25E6 edf file ", prefix * ".edf", " created")
@@ -431,8 +434,8 @@ function scan_run(data_dir, config::Dict, prefix;
 
             if i_chunk > chunk_size
                 if edfmode
-                    last_event = event_builder!(chunk, last_event, edffile,
-                                                specpars, beam_period;
+                    last_event = event_builder!(chunk, last_event,
+                                                eventpars, specpars, edffile;
                                                 valid_table=valid_table, 
                                                 cal_table=cal_table,
                                                 shift_table=shift_table,
@@ -441,8 +444,8 @@ function scan_run(data_dir, config::Dict, prefix;
                                                 pidpars=pidpars)
 
                 else
-                    last_event = event_builder!(chunk, last_event, spectra, 
-                                                specpars, beam_period;
+                    last_event = event_builder!(chunk, last_event, 
+                                                eventpars, specpars, spectra;
                                                 valid_table=valid_table, 
                                                 cal_table=cal_table,
                                                 shift_table=shift_table,

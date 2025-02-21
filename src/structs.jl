@@ -114,10 +114,6 @@ Parametrs of spectra for scan
     pidmax: max PID (0-max), e.g. (0-1.27 -> 128 bins)
     tmax: max. time (e.g 100 ns) for time spectra
     Mmax: max. multiplicity
-    ge_low: lowest energy in keV for Ge detector to accept
-    bgo_low: lowest energy in channels for BGO detector to use in compton supp.
-    neda_low: lowest energy in channels for NEDA detector to use
-    dia_low: lowest energy in channels for DIAMANT detector to use
     last_label: last valid label
 """
 struct SpectraPars
@@ -129,10 +125,6 @@ struct SpectraPars
     dpid::Float64
     pidmax::Float64
     Mmax::Int64
-    ge_low::Float64
-    bgo_low::Float64
-    neda_low::Float64
-    dia_low::Float64
     last_label::Int64
 end
 
@@ -146,11 +138,56 @@ function SpectraPars(config::Dict{String, Any})
                 config["spectra"]["dpid"],
                 config["spectra"]["pidmax"],
                 config["spectra"]["Mmax"],
-                config["spectra"]["ge_low"],
-                config["spectra"]["bgo_low"],
-                config["spectra"]["neda_low"],
-                config["spectra"]["dia_low"],
                 maximum(parse.(Int64, keys(config["label"])))
+               )
+end
+
+
+"""
+Parametrs of event building for scan 
+    * ge_low - lowest energy in Ge to consider further
+    * bgo_low - lowest ch number in BGO to consider further
+    * neda_low - same
+    * dia_low - same
+	* beam_period - beam period, used only for testing if calculated result
+                    matches this value
+    * ge_dt::Float64 - correlation window for Ge hits (for event building) 
+    * bgo_dt::Float64 - same
+    * neda_g_dt::Float64 - same for NEDA-gamma
+    * neda_n_dt::Float64 - same for NEDA-neutron
+    * dia_dt::Float64 - same
+    * t_delay::Float64 - shift of non-NEDA hits (Ge, BGO, DIAMANT), so they can 
+                        correlate with the beam pulse (NEDA signal) including 
+                        the natural plus-minus spread
+
+"""
+struct EventPars
+    ge_low::Float64
+    bgo_low::Float64
+    neda_low::Float64
+    dia_low::Float64
+	beam_period::Float64
+    ge_dt::Float64
+    bgo_dt::Float64
+    neda_g_dt::Float64
+    neda_n_dt::Float64
+    dia_dt::Float64
+    t_delay::Float64
+end
+
+
+function EventPars(config::Dict{String, Any})
+    EventPars(config["event"]["ge_low"],
+                config["event"]["bgo_low"],
+                config["event"]["neda_low"],
+                config["event"]["dia_low"],
+                config["event"]["beam_period"],
+                config["event"]["ge_dt"],
+                config["event"]["bgo_dt"],
+                config["event"]["neda_g_dt"],
+                config["event"]["neda_n_dt"],
+                config["event"]["dia_dt"],
+                config["event"]["t_delay"]
                )
 end
 

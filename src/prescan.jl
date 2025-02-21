@@ -90,10 +90,7 @@ function prescan(data_dir, config::Dict;
 
     i_file = 0
     t_ref = Float64[]
-    block_caen = true
-    block_dia = true
     n_print = 10_000_000
-    time_start = Dates.Time(Dates.now())
     for filename in files_caen
         i_file += 1
         if i_file > n_files
@@ -131,7 +128,6 @@ function prescan(data_dir, config::Dict;
                 if hit.E > Estartmin
                     pid = (Float64(hit.qshort) + randn()) / Float64(hit.E)
                     if (pidpars.g_low <= pid < pidpars.g_high)
-                        #Good gamma
                         push!(t_ref, t)
                     end
                 end
@@ -320,8 +316,8 @@ end
     
     returns config with updated value
 """
-function find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1, 
-                                    t_safe=200, dt_max=1000)
+function find_period(t_loc, ; period_loc=35, dt_min=-1000, dt=1, 
+                               t_safe=200, dt_max=1000)
     
     i1 = round(Int64, (t_safe-dt_min) / dt)
     i2 = i1 + round(Int64, 512 / dt) - 1
@@ -341,10 +337,8 @@ function find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1,
             ic += 3
         end
     end
-    new_config = copy(config)
-    new_config["spectra"]["beam_period"] = mean(localmins[2:end] 
-                                                - localmins[1:end-1])
-    new_config
+    period = mean(localmins[2:end] - localmins[1:end-1])
+    return period
 end
 
 
@@ -363,6 +357,8 @@ end
 function find_cal(E_loc, config::Dict)
     new_config = copy(config)
     
+    E1 = config["calibration"]["E1"]
+    E2 = config["calibration"]["E2"]
     last_label = size(E_loc)[1]
     x = collect(1:size(E_loc)[2]) .- 0.5
     for loc in 1:last_label
@@ -374,22 +370,22 @@ function find_cal(E_loc, config::Dict)
         
         y = E_loc[loc, :]
 
-        x511 = argmax(y[100:5000]) + 100
-        ab = 511 / x511
-        ch1257 = round(Int, 1257 / ab)
+        x1 = argmax(y[100:8000]) + 100
+        ab = E1 / x1
+        ch2 = round(Int, E2 / ab)
 
-        x1257 = argmax(y[ch1257-100:ch1257+100]) + ch1257 - 100
+        x2 = argmax(y[ch2-100:ch2+100]) + ch2 - 100
 
-        pf511 = curve_fit(gausslin, x[x511-50:x511+50], y[x511-50:x511+50], 
-                       [5.0*y[x511], x511, 10.0, y[x511-50], 0.0])
-        ch511 = pf511.param[2]
+        pf1 = curve_fit(gausslin, x[x1-50:x1+50], y[x1-50:x1+50], 
+                       [5.0*y[x1], x1, 10.0, y[x1-50], 0.0])
+        ch1 = pf1.param[2]
 
-        guess = [5.0*y[x1257], x1257, 10.0, y[x1257-50], 0.0]
-        pf1257 = curve_fit(gausslin, x[x1257-50:x1257+50], 
-                           y[x1257-50:x1257+50], guess)
-        ch1257 = pf1257.param[2]
-        a2 = (1256.69 - 511.0) / (ch1257 - ch511)
-        a1 = 1256.69 -  a2 * ch1257
+        guess = [5.0*y[x2], x2, 10.0, y[x2-50], 0.0]
+        pf2 = curve_fit(gausslin, x[x2-50:x2+50], 
+                           y[x2-50:x2+50], guess)
+        ch2 = pf2.param[2]
+        a2 = (E2 - E1) / (ch2 - ch1)
+        a1 = E2 - a2 * ch2
 
         new_config["label"]["$loc"]["cal"] = [a1, a2]
     end
