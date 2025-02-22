@@ -1,5 +1,5 @@
 title = "Config for experiment HIL117"
-comment = " "
+comment = "   "
 
 [boards]
     PHA = [0, 1]
@@ -27,6 +27,7 @@ comment = " "
 	neda_g_dt = 17.0
 	neda_n_dt = 37.0
 	dia_dt = 54.0
+	t_delay = 20.0
 
 [pid]
 	g_low = 0.71
@@ -37,6 +38,10 @@ comment = " "
 	a_high = 0.56
 	p_low = 0.56
 	p_high = 0.67
+
+[calibration]
+	E1 = 511.0
+	E2 = 1256.69
 
 [label.1]
 	type = "Ge"

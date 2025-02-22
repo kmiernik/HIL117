@@ -34,6 +34,7 @@ title = "Zero config for experiment HIL117
 	neda_g_dt = 10.0
 	neda_n_dt = 37.0
 	dia_dt = 37.0
+    t_delay = 20.0
 
 [pid]
 	g_low = 0.71
@@ -44,6 +45,10 @@ title = "Zero config for experiment HIL117
 	a_high = 0.56
 	p_low = 0.56
 	p_high = 0.67
+
+[calibration]
+	E1 = 511.0
+	E2 = 1256.69
 
 """
     print(fout, header)
@@ -141,17 +146,18 @@ function nicetoml(config, tomlfile, additional_comment="")
     print(fout, "\n")
 
     print(fout, "[spectra]\n")
-    parnames = ["dE", "Emax", "E2max", "dt", "tmax", "dpid", "pidmax",
+    specnames = ["dE", "Emax", "E2max", "dt", "tmax", "dpid", "pidmax",
                 "Mmax"]
-    for par in parnames
+    for par in specnames
         print(fout, "\t$par = ", config["spectra"][par], "\n")
     end
     print(fout, "\n")
 
     print(fout, "[event]\n")
-    parnames = ["ge_low", "bgo_low", "neda_low", "dia_low", "beam_period", 
-                "ge_dt", "bgo_dt", "neda_g_dt", "neda_n_dt", "dia_dt"]
-    for par in parnames
+    evnames = ["ge_low", "bgo_low", "neda_low", "dia_low", "beam_period", 
+                "ge_dt", "bgo_dt", "neda_g_dt", "neda_n_dt", "dia_dt",
+                "t_delay"]
+    for par in evnames
         print(fout, "\t$par = ", config["event"][par], "\n")
     end
     print(fout, "\n")
@@ -166,26 +172,23 @@ function nicetoml(config, tomlfile, additional_comment="")
     end
     print(fout, "\n")
 
+    print(fout, "[calibration]\n")
+    calnames = ["E1", "E2"]
+    for par in calnames
+        print(fout, "\t$par = ", config["calibration"][par], "\n")
+    end
+    print(fout, "\n")
+
     for entry in labels
         print(fout, "[label.", entry.first, "]\n")
         print(fout, "\ttype = \"", entry.second["type"], "\"\n")
         print(fout, "\tring = \"", entry.second["ring"], "\"\n")
         print(fout, "\tphi = \"", entry.second["phi"], "\"\n")
         print(fout, "\tdt = ", round(entry.second["dt"], digits=3), "\n")
-        if haskey(entry.second, "rcal")
-            print(fout, "\trcal = ", entry.second["rcal"], "\n")
-        elseif entry.first in 1:2:32
-            print(fout, "\trcal = [0.0, 1.0]\n")
-        end
         if haskey(entry.second, "cal")
             print(fout, "\tcal = ", entry.second["cal"], "\n")
-        elseif entry.first in 1:2:32
-            print(fout, "\tcal = [0.0, 1.0, 0.0, 1.0, 0.0, 0.0]\n")
         else
             print(fout, "\tcal = [0.0, 1.0]\n")
-        end
-        if haskey(entry.second, "fcal")
-            print(fout, "\tfcal = ", entry.second["fcal"], "\n")
         end
         print(fout, "\tvalid = ", entry.second["valid"], "\n")
         if haskey(entry.second, "comment")

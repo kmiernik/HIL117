@@ -313,7 +313,8 @@ end
     Returns 0 if no errors, 1 in case of error (along with warn message)
 """
 function scan_run(data_dir, config::Dict, prefix;
-                    chunk_size=100_000, dia_buf=100, n_prescan=2, edfmode=false)
+                    chunk_size=100_000, dia_buf=100, n_prescan=2, edfmode=false,
+                    saveconfig=false)
 
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
@@ -345,7 +346,9 @@ function scan_run(data_dir, config::Dict, prefix;
             @warn "Calculated period is different than one in config!"
         end
     end
-    nicetoml(config, @sprintf("config_%03d.toml", run_number))
+    if saveconfig
+        nicetoml(config, @sprintf("config_%03d.toml", run_number))
+    end
 
     cfin = open(files_caen[1], "r")
     csize = filesize(files_caen[1])
