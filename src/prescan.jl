@@ -48,9 +48,9 @@ function prescan(data_dir, config::Dict;
     end
 
     files_dia = readdir(data_dir, join=true)
-    filter!(x->split(x, '.')[2] == "dat", files_dia)
+    filter!(x->split(basename(x), '.')[2] == "dat", files_dia)
     if length(files_dia) > 0
-        files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+        files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(basename(x), '.')[end]))]
     end
 
     if n_files > length(files_caen)
@@ -296,8 +296,12 @@ function find_shifts(t_loc, config; dt_min=-1000, dt=1, dt_max=1000)
             t = dt_min:dt*4:dt_max .+ dt .* 2
         end
         xm = argmax(y)
-        new_config["label"]["$loc"]["dt"] = mean(t[xm-7:xm+7], 
-                                            weights(y[xm-7:xm+7]))
+        if xm > 8 && xm < dt_max - 8
+            new_config["label"]["$loc"]["dt"] = mean(t[xm-7:xm+7], 
+                                                weights(y[xm-7:xm+7]))
+        else
+            new_config["label"]["$loc"]["dt"] = t[xm]
+        end
     end
     new_config
 end
@@ -393,7 +397,7 @@ function find_cal(E_loc, config::Dict)
 end
 
 
-function prescan_all(dirname, configfile; n_prescan=2)
+function prescan_all(dirname, configfile; n_prescan=2, skipruns=Int64[])
     dirs = readdir(dirname, join=true)
     for dir in dirs
         if isfile(dir)
@@ -402,23 +406,22 @@ function prescan_all(dirname, configfile; n_prescan=2)
         if !startswith(basename(dir), "run_0")
             continue
         end
-        try
-            run_number = parse(Int64, split(basename(dir), '_')[2])
-            println("\u25CD Run $run_number ")
-            config = TOML.parsefile(configfile)
-            E_loc, t_loc = prescan(dir, config; n_files=n_prescan)
-            print("    \u25E6 Calculating shifts, calibration, and period (")
-            config = find_shifts(t_loc, config)
-            config = find_cal(E_loc, config)
-            calc_period = find_period(t_loc)
-            @printf("%.3f ns)\n", calc_period)
-            if abs(config["event"]["beam_period"] - calc_period) > 1.0
-                @warn "Calculated period is different than one in config!"
-            end
-            nicetoml(config, @sprintf("config/config_%03d.toml", run_number))
-        catch err
-            println(err)
-            println()
+        run_number = parse(Int64, split(basename(dir), ['_', '.'])[2])
+        println("\u25CD Run $run_number ")
+        if run_number in skipruns
+            println("   skipping")
+            continue
         end
+        config = TOML.parsefile(configfile)
+        E_loc, t_loc = prescan(dir, config; n_files=n_prescan)
+        print("    \u25E6 Calculating shifts, calibration, and period (")
+        config = find_shifts(t_loc, config)
+        config = find_cal(E_loc, config)
+        calc_period = find_period(t_loc)
+        @printf("%.3f ns)\n", calc_period)
+        if abs(config["event"]["beam_period"] - calc_period) > 1.0
+            @warn "Calculated period is different than one in config!"
+        end
+        nicetoml(config, @sprintf("config/config_%03d.toml", run_number))
     end
 end

@@ -9,6 +9,8 @@ using StatsBase
 using HDF5
 using Infiltrator
 using ProgressMeter
+using Distributed
+
 
 include("structs.jl")
 

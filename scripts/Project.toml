@@ -1,4 +1,5 @@
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
@@ -8,3 +9,4 @@ LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
 MTools = "81263d5a-55d9-4353-ac59-8b9e38c9ddc0"
 NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

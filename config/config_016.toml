@@ -1,0 +1,1390 @@
+title = "Config for experiment HIL117"
+comment = " "
+
+[boards]
+    PHA = [0, 1]
+    PSD = [2, 3, 4, 5]
+    DIA = [6, 7, 8, 9]
+
+[spectra]
+	dE = 1.0
+	Emax = 4096.0
+	E2max = 2560.0
+	dt = 1.0
+	tmax = 255.0
+	dpid = 0.01
+	pidmax = 1.27
+	Mmax = 10
+
+[event]
+	ge_low = 30.0
+	bgo_low = 2.0
+	neda_low = 70.0
+	dia_low = 100.0
+	beam_period = 74.0
+	ge_dt = 148.0
+	bgo_dt = 54.0
+	neda_g_dt = 17.0
+	neda_n_dt = 37.0
+	dia_dt = 54.0
+
+[pid]
+	g_low = 0.71
+	g_high = 0.95
+	n_low = 0.5
+	n_high = 0.69
+	a_low = 0.42
+	a_high = 0.56
+	p_low = 0.56
+	p_high = 0.67
+
+[label.1]
+	type = "Ge"
+	ring = "117"
+	phi = "0"
+	dt = 221.665
+	cal = [11.874095599833254, 0.3079567143203308]
+	valid = true
+	comment = " "
+
+[label.2]
+	type = "BGO"
+	ring = "117"
+	phi = "0"
+	dt = -13.965
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.3]
+	type = "Ge"
+	ring = "101"
+	phi = "0"
+	dt = 229.591
+	cal = [-0.7470821094832445, 0.15408406221215729]
+	valid = true
+	comment = " "
+
+[label.4]
+	type = "BGO"
+	ring = "101"
+	phi = "0"
+	dt = -36.091
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.5]
+	type = "Ge"
+	ring = "143"
+	phi = "0"
+	dt = 258.192
+	cal = [11.869574551393498, 0.3166120935311689]
+	valid = true
+	comment = " "
+
+[label.6]
+	type = "BGO"
+	ring = "143"
+	phi = "0"
+	dt = -27.927
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.7]
+	type = "Ge"
+	ring = "117"
+	phi = "0"
+	dt = 234.062
+	cal = [11.993157902409848, 0.30786987069744476]
+	valid = true
+	comment = " "
+
+[label.8]
+	type = "BGO"
+	ring = "117"
+	phi = "0"
+	dt = -36.945
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.9]
+	type = "Ge"
+	ring = "143"
+	phi = "0"
+	dt = 219.849
+	cal = [11.603694988619282, 0.2900056441906978]
+	valid = true
+	comment = " "
+
+[label.10]
+	type = "BGO"
+	ring = "143"
+	phi = "0"
+	dt = -28.104
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.11]
+	type = "Ge"
+	ring = "101"
+	phi = "0"
+	dt = 200.159
+	cal = [-0.7874431200434628, 0.16160861481568362]
+	valid = true
+	comment = " "
+
+[label.12]
+	type = "BGO"
+	ring = "101"
+	phi = "0"
+	dt = -39.802
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.13]
+	type = "Ge"
+	ring = "117"
+	phi = "0"
+	dt = 215.326
+	cal = [12.1700417884947, 0.28802050538169116]
+	valid = true
+	comment = " "
+
+[label.14]
+	type = "BGO"
+	ring = "117"
+	phi = "0"
+	dt = -41.973
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.15]
+	type = "Ge"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [0.0, 1.0]
+	valid = false
+	comment = " "
+
+[label.16]
+	type = "BGO"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [0.0, 1.0]
+	valid = false
+	comment = " "
+
+[label.17]
+	type = "Ge"
+	ring = "101"
+	phi = "0"
+	dt = 239.293
+	cal = [8.336121046640073, 0.40132182369545494]
+	valid = true
+	comment = " "
+
+[label.18]
+	type = "BGO"
+	ring = "101"
+	phi = "0"
+	dt = 91.945
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.19]
+	type = "Ge"
+	ring = "117"
+	phi = "0"
+	dt = 380.232
+	cal = [-8.104121861893645, 0.15938691886367323]
+	valid = true
+	comment = " "
+
+[label.20]
+	type = "BGO"
+	ring = "117"
+	phi = "0"
+	dt = 88.012
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.21]
+	type = "Ge"
+	ring = "143"
+	phi = "0"
+	dt = 309.854
+	cal = [-0.8326910145808597, 0.15714887754032153]
+	valid = true
+	comment = " "
+
+[label.22]
+	type = "BGO"
+	ring = "143"
+	phi = "0"
+	dt = 59.682
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.23]
+	type = "Ge"
+	ring = "143"
+	phi = "0"
+	dt = 321.12
+	cal = [9.884268605867874, 0.2714616306639727]
+	valid = true
+	comment = " "
+
+[label.24]
+	type = "BGO"
+	ring = "143"
+	phi = "0"
+	dt = 60.104
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.25]
+	type = "Ge"
+	ring = "143"
+	phi = "0"
+	dt = 328.936
+	cal = [-0.8073321509855305, 0.15539928982228207]
+	valid = true
+	comment = " "
+
+[label.26]
+	type = "BGO"
+	ring = "143"
+	phi = "0"
+	dt = 67.962
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.27]
+	type = "Ge"
+	ring = "117"
+	phi = "0"
+	dt = 297.742
+	cal = [10.500124310132605, 0.29377468040328986]
+	valid = true
+	comment = " "
+
+[label.28]
+	type = "BGO"
+	ring = "117"
+	phi = "0"
+	dt = 56.112
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.29]
+	type = "Ge"
+	ring = "101"
+	phi = "0"
+	dt = 398.83
+	cal = [12.45864943857464, 0.30311087733920344]
+	valid = true
+	comment = " "
+
+[label.30]
+	type = "BGO"
+	ring = "101"
+	phi = "0"
+	dt = 60.941
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.31]
+	type = "Ge"
+	ring = "117"
+	phi = "0"
+	dt = 310.752
+	cal = [10.80603453281742, 0.34895672097114877]
+	valid = true
+	comment = " "
+
+[label.32]
+	type = "BGO"
+	ring = "117"
+	phi = "0"
+	dt = 54.271
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.33]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [0.0, 1.0]
+	valid = true
+	comment = " "
+
+[label.34]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [132.94175824175824, 202.71052631578948]
+	valid = true
+	comment = " "
+
+[label.35]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -2.655
+	cal = [139.18956476140534, 237.71686746987953]
+	valid = true
+	comment = " "
+
+[label.36]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -0.297
+	cal = [145.84438502673797, 250.988]
+	valid = true
+	comment = " "
+
+[label.37]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 0.943
+	cal = [125.23289036544851, 193.578853046595]
+	valid = true
+	comment = " "
+
+[label.38]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 1.983
+	cal = [128.9945424013434, 216.72743682310468]
+	valid = true
+	comment = " "
+
+[label.39]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 1.497
+	cal = [119.9614370468029, 183.9830917874396]
+	valid = true
+	comment = " "
+
+[label.40]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 5.05
+	cal = [123.5, 187.5]
+	valid = true
+	comment = " "
+
+[label.41]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 2.959
+	cal = [115.5, 171.5]
+	valid = true
+	comment = " "
+
+[label.42]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 1.055
+	cal = [99.5, 147.5]
+	valid = true
+	comment = " "
+
+[label.43]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 0.035
+	cal = [122.55379513633014, 158.55990783410138]
+	valid = true
+	comment = " "
+
+[label.44]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -3.937
+	cal = [102.03169952051145, 141.0744680851064]
+	valid = true
+	comment = " "
+
+[label.45]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -0.795
+	cal = [138.7570828961175, 221.1156351791531]
+	valid = true
+	comment = " "
+
+[label.46]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 3.333
+	cal = [107.5, 155.5]
+	valid = true
+	comment = " "
+
+[label.47]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 1.314
+	cal = [119.1923076923077, 160.375]
+	valid = true
+	comment = " "
+
+[label.48]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = 0.106
+	cal = [123.16360052562418, 165.27297297297298]
+	valid = true
+	comment = " "
+
+[label.49]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.541
+	cal = [108.31971465629053, 146.28846153846155]
+	valid = true
+	comment = " "
+
+[label.50]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -11.589
+	cal = [109.72864651773982, 144.1027397260274]
+	valid = true
+	comment = " "
+
+[label.51]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -18.28
+	cal = [135.0979695431472, 178.10416666666666]
+	valid = true
+	comment = " "
+
+[label.52]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -16.344
+	cal = [116.05, 160.2425149700599]
+	valid = true
+	comment = " "
+
+[label.53]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -13.712
+	cal = [123.49168399168398, 176.64454277286137]
+	valid = true
+	comment = " "
+
+[label.54]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -12.082
+	cal = [118.74854744996772, 159.6167883211679]
+	valid = true
+	comment = " "
+
+[label.55]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -17.831
+	cal = [94.83673469387755, 131.359649122807]
+	valid = true
+	comment = " "
+
+[label.56]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -13.734
+	cal = [123.89210998206813, 182.6131221719457]
+	valid = true
+	comment = " "
+
+[label.57]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -18.186
+	cal = [119.5658070253446, 152.1060606060606]
+	valid = true
+	comment = " "
+
+[label.58]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.049
+	cal = [126.44862248696947, 179.21681415929203]
+	valid = true
+	comment = " "
+
+[label.59]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.222
+	cal = [130.47921146953405, 188.10759493670886]
+	valid = true
+	comment = " "
+
+[label.60]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -13.948
+	cal = [132.23364801078895, 181.83846153846153]
+	valid = true
+	comment = " "
+
+[label.61]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.131
+	cal = [113.9684767602393, 148.703007518797]
+	valid = true
+	comment = " "
+
+[label.62]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -12.834
+	cal = [151.72888283378745, 205.2993079584775]
+	valid = true
+	comment = " "
+
+[label.63]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.571
+	cal = [115.9740307242136, 152.26073619631902]
+	valid = true
+	comment = " "
+
+[label.64]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -17.933
+	cal = [130.47848716169327, 204.22727272727272]
+	valid = true
+	comment = " "
+
+[label.65]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.111
+	cal = [106.47039274924471, 135.4598662207358]
+	valid = true
+	comment = " "
+
+[label.66]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -13.518
+	cal = [112.47921478060046, 136.7582159624413]
+	valid = true
+	comment = " "
+
+[label.67]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -12.775
+	cal = [150.7248062015504, 203.28305084745762]
+	valid = true
+	comment = " "
+
+[label.68]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -12.496
+	cal = [147.4839163650985, 193.5143198090692]
+	valid = true
+	comment = " "
+
+[label.69]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -15.151
+	cal = [118.85923048464669, 169.42828685258965]
+	valid = true
+	comment = " "
+
+[label.70]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -10.914
+	cal = [131.41006842619745, 171.6012658227848]
+	valid = true
+	comment = " "
+
+[label.71]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.538
+	cal = [137.2115987460815, 175.68897637795277]
+	valid = true
+	comment = " "
+
+[label.72]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -11.244
+	cal = [134.03179190751445, 178.48666666666668]
+	valid = true
+	comment = " "
+
+[label.73]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -11.506
+	cal = [121.10455655004068, 168.04258675078864]
+	valid = true
+	comment = " "
+
+[label.74]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -10.042
+	cal = [165.01951431049437, 202.4387755102041]
+	valid = true
+	comment = " "
+
+[label.75]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -15.227
+	cal = [107.05143338954468, 137.95]
+	valid = true
+	comment = " "
+
+[label.76]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -10.741
+	cal = [138.4090909090909, 177.0195530726257]
+	valid = true
+	comment = " "
+
+[label.77]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -14.743
+	cal = [85.33050847457628, 126.55454545454545]
+	valid = true
+	comment = " "
+
+[label.78]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -10.92
+	cal = [166.8548387096774, 200.12135922330097]
+	valid = true
+	comment = " "
+
+[label.79]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -11.885
+	cal = [138.63533834586465, 170.8972602739726]
+	valid = true
+	comment = " "
+
+[label.80]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -16.216
+	cal = [77.76168224299066, 105.1]
+	valid = true
+	comment = " "
+
+[label.81]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -2.14
+	cal = [145.4040590405904, 193.0157894736842]
+	valid = true
+	comment = " "
+
+[label.82]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -4.211
+	cal = [80.0, 80.83333333333333]
+	valid = true
+	comment = " "
+
+[label.83]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -4.055
+	cal = [106.44641704325372, 147.4765395894428]
+	valid = true
+	comment = " "
+
+[label.84]
+	type = "NEDA"
+	ring = "0"
+	phi = "0"
+	dt = -4.109
+	cal = [118.66346502355925, 160.86263736263737]
+	valid = true
+	comment = " "
+
+[label.89]
+	type = "Sum"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [0.0, 1.0]
+	valid = false
+	comment = " "
+
+[label.93]
+	type = "Trig"
+	ring = "0"
+	phi = "0"
+	dt = 0.0
+	cal = [0.0, 1.0]
+	valid = false
+	comment = " "
+
+[label.97]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 502.108
+	cal = [45755.86285284837, 0.5732699240586732]
+	valid = true
+	comment = " "
+
+[label.98]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 502.207
+	cal = [53540.4255365353, 0.5857080335691983]
+	valid = true
+	comment = " "
+
+[label.99]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 493.908
+	cal = [47360.27391950573, 0.5919861330793544]
+	valid = true
+	comment = " "
+
+[label.100]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 487.766
+	cal = [56064.703308437616, 0.5662294101101376]
+	valid = true
+	comment = " "
+
+[label.101]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 502.898
+	cal = [46234.25007276567, 0.5821081067754399]
+	valid = true
+	comment = " "
+
+[label.102]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 502.839
+	cal = [70270.4598031226, 0.5860661798106627]
+	valid = true
+	comment = " "
+
+[label.103]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 493.918
+	cal = [46314.53433393846, 0.5930074809178528]
+	valid = true
+	comment = " "
+
+[label.104]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 493.791
+	cal = [62092.29875104127, 0.5864172359485677]
+	valid = true
+	comment = " "
+
+[label.105]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 585.555
+	cal = [58676.42410728866, 0.5699807920866389]
+	valid = true
+	comment = " "
+
+[label.106]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 506.199
+	cal = [51328.83540531011, 0.5587818724649223]
+	valid = true
+	comment = " "
+
+[label.107]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 494.907
+	cal = [50708.41784562175, 0.5805212726902121]
+	valid = true
+	comment = " "
+
+[label.108]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 493.784
+	cal = [52486.242995471555, 0.568695831313989]
+	valid = true
+	comment = " "
+
+[label.109]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 497.922
+	cal = [51668.94850953791, 0.5749363891942082]
+	valid = true
+	comment = " "
+
+[label.110]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 496.228
+	cal = [40963.775326791285, 0.5645714941794282]
+	valid = true
+	comment = " "
+
+[label.111]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 490.497
+	cal = [42653.79392975229, 0.5890091778906991]
+	valid = true
+	comment = " "
+
+[label.112]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 566.26
+	cal = [54816.73093490118, 0.583722194146109]
+	valid = true
+	comment = " "
+
+[label.113]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 607.425
+	cal = [70712.87863666797, 0.6364563198972707]
+	valid = true
+	comment = " "
+
+[label.114]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 527.082
+	cal = [65543.25693296426, 0.583489496786275]
+	valid = true
+	comment = " "
+
+[label.115]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 515.045
+	cal = [50742.780287406094, 0.5842271185089656]
+	valid = true
+	comment = " "
+
+[label.116]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 518.646
+	cal = [60270.300609891936, 0.5753828567090976]
+	valid = true
+	comment = " "
+
+[label.117]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 519.576
+	cal = [40412.42149738309, 0.5919665811135129]
+	valid = true
+	comment = " "
+
+[label.118]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 521.653
+	cal = [49332.52119216394, 0.5854170967187526]
+	valid = true
+	comment = " "
+
+[label.119]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 516.749
+	cal = [33762.291626755774, 0.587241432729835]
+	valid = true
+	comment = " "
+
+[label.120]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 513.474
+	cal = [59551.364866070486, 0.5782617857608533]
+	valid = true
+	comment = " "
+
+[label.121]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 517.532
+	cal = [115498.9844929326, 0.5240149002055823]
+	valid = true
+	comment = " "
+
+[label.122]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 527.725
+	cal = [49425.5729205918, 0.5824476833313476]
+	valid = true
+	comment = " "
+
+[label.123]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 503.034
+	cal = [30000.0, 0.6]
+	valid = true
+	comment = " "
+
+[label.124]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 505.437
+	cal = [65829.40106438758, 0.5743857603340512]
+	valid = true
+	comment = " "
+
+[label.125]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 521.795
+	cal = [47479.53652154063, 0.581005548174246]
+	valid = true
+	comment = " "
+
+[label.126]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 521.357
+	cal = [70575.03873673148, 0.5767571470217802]
+	valid = true
+	comment = " "
+
+[label.127]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 520.339
+	cal = [48168.76185940672, 0.5733220514794268]
+	valid = true
+	comment = " "
+
+[label.128]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 521.818
+	cal = [43198.36373830144, 0.59072559805364]
+	valid = true
+	comment = " "
+
+[label.129]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 516.777
+	cal = [33130.70977652866, 0.5498364972758828]
+	valid = true
+	comment = " "
+
+[label.130]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 519.219
+	cal = [35358.911305126094, 0.5391334232323389]
+	valid = true
+	comment = " "
+
+[label.131]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 507.963
+	cal = [80851.03199118517, 0.5251463500472074]
+	valid = true
+	comment = " "
+
+[label.132]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 509.773
+	cal = [41749.961583021985, 0.5479527348090799]
+	valid = true
+	comment = " "
+
+[label.133]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 517.573
+	cal = [64565.421771176596, 0.4968352021701244]
+	valid = true
+	comment = " "
+
+[label.134]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 515.02
+	cal = [48537.44016836538, 0.47909099127859633]
+	valid = true
+	comment = " "
+
+[label.135]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 501.59
+	cal = [37687.67967282194, 0.5067130450831486]
+	valid = true
+	comment = " "
+
+[label.136]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 502.789
+	cal = [21384.374907371326, 0.5461406331650641]
+	valid = true
+	comment = " "
+
+[label.137]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 505.754
+	cal = [40249.3623734949, 0.554850270528982]
+	valid = true
+	comment = " "
+
+[label.138]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 499.922
+	cal = [40399.55043113439, 0.5525891451991947]
+	valid = true
+	comment = " "
+
+[label.139]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 506.182
+	cal = [68419.81701243206, 0.5263281615678881]
+	valid = true
+	comment = " "
+
+[label.140]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 506.935
+	cal = [41170.04709754098, 0.5586896539571087]
+	valid = true
+	comment = " "
+
+[label.141]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 510.577
+	cal = [67912.39352970354, 0.5197832381550331]
+	valid = true
+	comment = " "
+
+[label.142]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 510.021
+	cal = [69120.38084159841, 0.5243354966725663]
+	valid = true
+	comment = " "
+
+[label.143]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 490.576
+	cal = [78434.64114760092, 0.49263546535224784]
+	valid = true
+	comment = " "
+
+[label.144]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 487.816
+	cal = [49486.39788114953, 0.5266072248914427]
+	valid = true
+	comment = " "
+
+[label.145]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 506.211
+	cal = [57876.72203376098, 0.5736087595173877]
+	valid = true
+	comment = " "
+
+[label.146]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 508.442
+	cal = [61017.30543329343, 0.5721899906707902]
+	valid = true
+	comment = " "
+
+[label.147]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 496.827
+	cal = [63823.01879053914, 0.5746720421941488]
+	valid = true
+	comment = " "
+
+[label.148]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 494.261
+	cal = [76107.30962688623, 0.5600001660932744]
+	valid = true
+	comment = " "
+
+[label.149]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 502.272
+	cal = [51227.1268628922, 0.5733306717222518]
+	valid = true
+	comment = " "
+
+[label.150]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 505.82
+	cal = [46763.03418876215, 0.5712332033077756]
+	valid = true
+	comment = " "
+
+[label.151]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 499.261
+	cal = [41463.86496301681, 0.5780770312043749]
+	valid = true
+	comment = " "
+
+[label.152]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 501.466
+	cal = [70398.15423590994, 0.5688632088006866]
+	valid = true
+	comment = " "
+
+[label.153]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 512.46
+	cal = [53584.941607022985, 0.5907169134499374]
+	valid = true
+	comment = " "
+
+[label.154]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 513.634
+	cal = [58492.66647513641, 0.5788485826330465]
+	valid = true
+	comment = " "
+
+[label.155]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 495.651
+	cal = [55877.14852969179, 0.5868948291087855]
+	valid = true
+	comment = " "
+
+[label.156]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 577.517
+	cal = [73408.85098702167, 0.6534181373751848]
+	valid = true
+	comment = " "
+
+[label.157]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 505.259
+	cal = [70806.15181456182, 0.5856006743104543]
+	valid = true
+	comment = " "
+
+[label.158]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 503.653
+	cal = [64945.01356888902, 0.5675848634731795]
+	valid = true
+	comment = " "
+
+[label.159]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 497.401
+	cal = [53899.439070172186, 0.5750006062537635]
+	valid = true
+	comment = " "
+
+[label.160]
+	type = "DIAMANT"
+	ring = "0"
+	phi = "0"
+	dt = 497.787
+	cal = [67922.70793805017, 0.5832130508127849]
+	valid = true
+	comment = " "
+

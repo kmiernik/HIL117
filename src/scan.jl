@@ -322,12 +322,14 @@ function scan_run(data_dir, config::Dict, prefix;
         return 1
     end
 
-    run_number = parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-2])
+    run_number = parse(Int64, split(basename(files_caen[1]), 
+                                    ['/', '_', '.'])[end-2])
 
     files_dia = readdir(data_dir, join=true)
-    filter!(x->split(x, '.')[2] == "dat", files_dia)
+    filter!(x->split(basename(x), '.')[2] == "dat", files_dia)
     if length(files_dia) > 0
-        files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+        files_dia = [files_dia[1]; sort(files_dia[2:end], 
+                            by=x->parse(Int64, split(basename(x), '.')[end]))]
     end
 
     println("\u25CD Run $run_number ")
@@ -530,4 +532,47 @@ function scan_run(data_dir, config::Dict, prefix;
     end
 
     return 0
+end
+
+
+
+function scan_all(dirname, configfile; use_configs=false, n_prescan=2,
+                                      skipruns=Int64[])
+    dirs = readdir(dirname, join=true)
+    scan_dirs = String[]
+    scan_confs = String[]
+    scan_prefixes = String[]
+    scan_prescans = Int64[]
+    for dir in dirs
+        if isfile(dir)
+            continue
+        end
+        if !startswith(basename(dir), "run_0")
+            continue
+        end
+        run_number = parse(Int64, split(basename(dir), ['_', '.'])[2])
+        if run_number in skipruns
+            continue
+        end
+        push!(scan_dirs, dir)
+        push!(scan_prefixes, @sprintf("run_%03d", run_number))
+        if use_configs
+            if isfile(@sprintf("config/config_%03d.toml", run_number))
+                push!(scan_confs, 
+                      @sprintf("config/config_%03d.toml", run_number))
+                push!(scan_prescans, 0)
+            else
+                push!(scan_confs, configfile)
+                push!(scan_prescans, n_prescan)
+            end
+        else
+            push!(scan_confs, configfile)
+            push!(scan_prescans, n_prescan)
+        end
+    end
+    pmap((d, c, p, r)->scan_run(d, c, p; n_prescan=r), 
+         [d for d in scan_dirs],
+         [c for c in scan_confs],
+         [p for p in scan_prefixes], 
+         [r for r in scan_prescans])
 end
