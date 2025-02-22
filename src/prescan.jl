@@ -1,7 +1,6 @@
 """
 """
 function prescan(data_dir, configfile::String; args...)
-
     config = TOML.parsefile(configfile)
     prescan(data_dir, config; args...)
 end
@@ -43,14 +42,16 @@ function prescan(data_dir, config::Dict;
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
 
-    if length(files_caen) < 1
+    if length(files_caen) == 0
         @warn "No caendat files found"
-        return 0
+        return E_loc, t_loc
     end
 
     files_dia = readdir(data_dir, join=true)
     filter!(x->split(x, '.')[2] == "dat", files_dia)
-    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+    if length(files_dia) > 0
+        files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+    end
 
     if n_files > length(files_caen)
         @warn "There are no $n_files caendat file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
@@ -302,7 +303,6 @@ function find_shifts(t_loc, config; dt_min=-1000, dt=1, dt_max=1000)
 end
 
 
-
 """
     find_period(t_loc, config; period_loc=35, dt_min=-1000, dt=1, 
                                     t_safe=200, dt_max=1000)
@@ -390,4 +390,35 @@ function find_cal(E_loc, config::Dict)
         new_config["label"]["$loc"]["cal"] = [a1, a2]
     end
     new_config
+end
+
+
+function prescan_all(dirname, configfile; n_prescan=2)
+    dirs = readdir(dirname, join=true)
+    for dir in dirs
+        if isfile(dir)
+            continue
+        end
+        if !startswith(basename(dir), "run_0")
+            continue
+        end
+        try
+            run_number = parse(Int64, split(basename(dir), '_')[2])
+            println("\u25CD Run $run_number ")
+            config = TOML.parsefile(configfile)
+            E_loc, t_loc = prescan(dir, config; n_files=n_prescan)
+            print("    \u25E6 Calculating shifts, calibration, and period (")
+            config = find_shifts(t_loc, config)
+            config = find_cal(E_loc, config)
+            calc_period = find_period(t_loc)
+            @printf("%.3f ns)\n", calc_period)
+            if abs(config["event"]["beam_period"] - calc_period) > 1.0
+                @warn "Calculated period is different than one in config!"
+            end
+            nicetoml(config, @sprintf("config/config_%03d.toml", run_number))
+        catch err
+            println(err)
+            println()
+        end
+    end
 end

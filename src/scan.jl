@@ -317,11 +317,18 @@ function scan_run(data_dir, config::Dict, prefix;
 
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
+    if length(files_caen) == 0
+        @warn "Could not find caendat files, aborting scan"
+        return 1
+    end
+
     run_number = parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-2])
 
     files_dia = readdir(data_dir, join=true)
     filter!(x->split(x, '.')[2] == "dat", files_dia)
-    files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+    if length(files_dia) > 0
+        files_dia = [files_dia[1]; sort(files_dia[2:end], by=x->parse(Int64, split(x, '.')[end]))]
+    end
 
     println("\u25CD Run $run_number ")
     println("\u25CD Prescanning $n_prescan file(s)")
@@ -366,8 +373,15 @@ function scan_run(data_dir, config::Dict, prefix;
     end
 
     i_dia = 1
-    dfin = open(files_dia[1], "r")
-    dsize = filesize(files_dia[1])
+    if length(files_dia) > 0
+        dfin = open(files_dia[1], "r")
+        dsize = filesize(files_dia[1])
+    else
+        dfin = IOBuffer()
+        close(dfin)
+        dsize = 0
+        dia_good = false
+    end
 
     totsize = 0
     donesize = 0
