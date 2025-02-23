@@ -310,7 +310,7 @@ end
     chunk_size is number of hits to be broken into events (of length equal to
     beam period).
 
-    Returns 0 if no errors, 1 in case of error (along with warn message)
+    Returns 0 if no errors, 1 in case of error #(along with warn message)
 """
 function scan_run(data_dir, config::Dict, prefix;
                     chunk_size=100_000, dia_buf=100, n_prescan=2, edfmode=false,
@@ -319,7 +319,7 @@ function scan_run(data_dir, config::Dict, prefix;
     files_caen = readdir(data_dir, join=true)
     filter!(x->endswith(x, ".caendat"), files_caen)
     if length(files_caen) == 0
-        @warn "Could not find caendat files, aborting scan"
+        #@warn "Could not find caendat files, aborting scan"
         return 1
     end
 
@@ -343,7 +343,7 @@ function scan_run(data_dir, config::Dict, prefix;
         calc_period = find_period(t_loc)
         @printf("%.3f ns)\n", calc_period)
         if abs(config["event"]["beam_period"] - calc_period) > 1.0
-            @warn "Calculated period is different than one in config!"
+            @warn "Calculated period is different than the one in config!"
         end
     end
     if saveconfig

@@ -6,7 +6,7 @@
     each channel, returns config Dict with updated values
 """
 function find_shifts(t_loc, config, prefix; dt_min=-1000, dt=1, dt_max=1000,
-                                    doplot=false)
+                                            thr=30)
     last_label = size(t_loc)[1]
     new_config = copy(config)
     for loc in 1:last_label
@@ -15,28 +15,103 @@ function find_shifts(t_loc, config, prefix; dt_min=-1000, dt=1, dt_max=1000,
         end
         y = vec(t_loc[loc, :])
         t = dt_min:dt:dt_max
-        if config["label"]["$loc"]["type"] == "Ge"
-            y = vec(rebin(y, 4))
-            t = dt_min:dt*4:dt_max .+ dt .* 2
+        binsize = 1
+        if config["label"]["$loc"]["type"] !== "NEDA"
+            binsize = 5
+            y = vec(rebin(y[2:end], binsize))
+            t = vec(rebin(collect(dt_min+1:dt:dt_max), binsize))
         end
-        xm = argmax(y)
+        dy = y[2:end] .- y[1:end-1]
+        
+        #=
+        b = 15
+        s = 5
+        χ = 0.5
+
+        bs = mean(y[1:b])
+        inv = zeros(size(y))
+        inv[s+1:end] = y[1:end-s] .- bs
+        dy = χ .* (y .- bs) .- inv
+        t_lim = argmax(dy)
+        t0 = findfirst(x->x<0, dy[t_lim:end]) + t_lim
+
+        a = (dy[t0-1] - dy[t0+1]) / (t[t0-1] - t[t0+1])
+        b = dy[t0+1] - t[t0+1] * a
+        zc = -b/a
+        =#
+
+        tp = -1
+        tm = -1
+        zc = -1
+        thr = abs(minimum(dy) / 4)
+        xm = findfirst(x->x>maximum(dy)/2, dy)
+        xd = 0
+        if config["label"]["$loc"]["type"] == "GE"
+            xd = round(Int, 80 / binsize)
+        elseif config["label"]["$loc"]["type"] == "BGO"
+            xd = round(Int, 80 / binsize)
+        elseif config["label"]["$loc"]["type"] == "NEDA"
+            xd = round(Int, 10 / binsize)
+        elseif config["label"]["$loc"]["type"] == "DIAMANT"
+            xd = round(Int, 40 / binsize)
+        end
+        for i in xm:xm+xd
+            if dy[i] > 0
+                tp = i
+            elseif dy[i] <= 0 && tp > 0
+                tm = i
+                a = (dy[tm] - dy[tp]) / (t[tm] - t[tp])
+                b = dy[tm] - t[tm] * a
+                zc = -b/a
+                break
+            end
+        end
+        if zc < 0
+            zc = t[argmax(y)]
+        end
+
+        #=
         new_config["label"]["$loc"]["dt"] = mean(t[xm-7:xm+7], 
                                             weights(y[xm-7:xm+7]))
+        =#
+
         fig = Figure(size=(600, 400))
-        ax = Axis(fig[1, 1]; title="$loc")
-        scatter!(ax, t, y)
+        ax1 = Axis(fig[1, 1]; title="$loc")
+        ax2 = Axis(fig[2, 1]; title="$loc")
+        linkxaxes!(ax1, ax2)
+        hlines!(ax2, [0.0], color=:black)
+
+        scatter!(ax1, t, y)
+        vlines!(ax1, [zc], color=:red, linestyle=:dot)
+
+        scatter!(ax2, t[1:end-1], dy)
+        if tp > 0 && tm > 0
+            scatterlines!(ax2, [t[tp], t[tm]], [dy[tp], dy[tm]], 
+                     marker=:cross, color=:red)
+        else
+            scatter!(ax1, [zc], [maximum(y)],
+                     marker=:utriangle, color=:red)
+        end
+
+        vlines!(ax2, [zc], color=:red, linestyle=:dot)
+        vlines!(ax2, [t[xm], t[xm+xd]], color=:gray, linestyle=:dot)
+        #hlines!(ax2, [-thr, thr], color=:gray, linestyle=:dot)
+         
+        #=
         scatter!(ax, t[xm-7:xm+7], y[xm-7:xm+7], 
                 marker=:cross, color=:red)
         vlines!(ax, [new_config["label"]["$loc"]["dt"]], 
                 color=:red, linestyle=:dot)
+        =#
+
         if config["label"]["$loc"]["type"] == "Ge"
-            xlims!(ax, t[xm-50], t[xm+50])
+            xlims!(ax2, zc-100, zc+100)
         elseif config["label"]["$loc"]["type"] == "BGO"
-            xlims!(ax, t[xm-100], t[xm+100])
+            xlims!(ax2, zc-100, zc+100)
         elseif config["label"]["$loc"]["type"] == "DIAMANT"
-            xlims!(ax, t[xm-100], t[xm+100])
+            xlims!(ax2, zc-100, zc+100)
         elseif config["label"]["$loc"]["type"] == "NEDA"
-            xlims!(ax, t[xm-20], t[xm+20])
+            xlims!(ax2, zc-20, zc+20)
         end
         save(@sprintf("%s_%03d.png", prefix, loc), fig)
     end

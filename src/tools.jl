@@ -298,3 +298,19 @@ function progress_dots(prefix, time_start, cpos, dpos,
 end
 
 
+"""
+    Modify prescanned config files for each run.
+    Change function according to needs.
+"""
+function modify_config_bulk()
+	files = readdir("config/", join=true)
+	filter!(x->startswith(basename(x), "config_"), files)
+	for file in files
+	    config = TOML.parsefile(file)
+	    config["event"]["t_delay"] = 20.0
+	    config["calibration"] = Dict{String, Any}()
+	    config["calibration"]["E1"] = 511.0
+	    config["calibration"]["E2"] = 1256.69
+	    nicetoml(config, file)
+	end
+end

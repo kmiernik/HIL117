@@ -35,7 +35,7 @@ function prescan(data_dir, config::Dict;
     E_loc = zeros(Int64, last_label, length(1:E_max))
     t_loc = zeros(Int64, last_label, length(dt_min:dt:dt_max))
     if n_files == 0
-        @warn "No files to be prescanned"
+        #@warn "No files to be prescanned"
         return E_loc, t_loc
     end
 
@@ -43,7 +43,7 @@ function prescan(data_dir, config::Dict;
     filter!(x->endswith(x, ".caendat"), files_caen)
 
     if length(files_caen) == 0
-        @warn "No caendat files found"
+        #@warn "No caendat files found"
         return E_loc, t_loc
     end
 
@@ -54,18 +54,18 @@ function prescan(data_dir, config::Dict;
     end
 
     if n_files > length(files_caen)
-        @warn "There are no $n_files caendat file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
+        #@warn "There are no $n_files caendat file(s) to be prescanned, using $(length(files_caen)) file(s) instead"
         n_files = length(files_caen)
     end
 
     if n_files > length(files_caen) && n_files > length(files_dia)
         n_new = maximum(length(files_caen), length(files_dia))
-        @warn "There are no both $n_files caendat and diamant file(s) to be prescanned, using $(n_new) file(s) instead"
+        #@warn "There are no both $n_files caendat and diamant file(s) to be prescanned, using $(n_new) file(s) instead"
         n_files = n_new
     elseif n_files > length(files_dia)
-        @warn "There are no $n_files diamant file(s) to be prescanned"
+        #@warn "There are no $n_files diamant file(s) to be prescanned"
     elseif n_files > length(files_caen)
-        @warn "There are no $n_files caendat file(s) to be prescanned"
+        #@warn "There are no $n_files caendat file(s) to be prescanned"
     end
 
     cfin = open(files_caen[1], "r")
@@ -76,8 +76,8 @@ function prescan(data_dir, config::Dict;
         agava_ts = header[4] % UInt64
         agava_ts = agava_ts << 32 + header[5] % UInt64
     else
-        @warn "Could not read agava time stamp"
-        return 0
+        #@warn "Could not read agava time stamp"
+        return 1
     end
     csize = filesize(files_caen[1])
 
@@ -149,7 +149,7 @@ function prescan(data_dir, config::Dict;
         dfin = open(files_dia[1], "r")
         dsize = filesize(files_dia[1])
     else
-        @warn "No diamant files found"
+        #@warn "No diamant files found"
         dfin = IOBuffer()
         close(dfin)
         dsize = 0
@@ -229,7 +229,7 @@ function prescan(data_dir, config::Dict;
                 abs(t_ref[i_ref] - t) < abs(t_ref[i_ref-1] - t), 
                     t - t_ref[i_ref], t - t_ref[i_ref-1])
                 if dt_min < dti < dt_max
-                    it = round(Int, (dti - dt_min) / dt) + 1 
+                    it = round(Int, (dti - dt_min) / dt, RoundUp)
                     t_loc[loc, it] += 1
                 end
             end
@@ -291,17 +291,44 @@ function find_shifts(t_loc, config; dt_min=-1000, dt=1, dt_max=1000)
         end
         y = vec(t_loc[loc, :])
         t = dt_min:dt:dt_max
-        if config["label"]["$loc"]["type"] == "Ge"
-            y = vec(rebin(y, 4))
-            t = dt_min:dt*4:dt_max .+ dt .* 2
+        binsize = 1
+        if config["label"]["$loc"]["type"] !== "NEDA"
+            binsize = 5
+            y = vec(rebin(y[2:end], binsize))
+            t = vec(rebin(collect(dt_min+1:dt:dt_max), binsize))
         end
-        xm = argmax(y)
-        if xm > 8 && xm < dt_max - 8
-            new_config["label"]["$loc"]["dt"] = mean(t[xm-7:xm+7], 
-                                                weights(y[xm-7:xm+7]))
-        else
-            new_config["label"]["$loc"]["dt"] = t[xm]
+        dy = y[2:end] .- y[1:end-1]
+        
+        tp = -1
+        tm = -1
+        zc = -1
+        thr = abs(minimum(dy) / 4)
+        xm = findfirst(x->x>maximum(dy)/2, dy)
+        xd = 0
+        if config["label"]["$loc"]["type"] == "GE"
+            xd = round(Int, 80 / binsize)
+        elseif config["label"]["$loc"]["type"] == "BGO"
+            xd = round(Int, 80 / binsize)
+        elseif config["label"]["$loc"]["type"] == "NEDA"
+            xd = round(Int, 10 / binsize)
+        elseif config["label"]["$loc"]["type"] == "DIAMANT"
+            xd = round(Int, 40 / binsize)
         end
+        for i in xm:xm+xd
+            if dy[i] > 0
+                tp = i
+            elseif dy[i] <= 0 && tp > 0
+                tm = i
+                a = (dy[tm] - dy[tp]) / (t[tm] - t[tp])
+                b = dy[tm] - t[tm] * a
+                zc = -b/a
+                break
+            end
+        end
+        if zc < 0
+            zc = t[argmax(y)]
+        end
+        new_config["label"]["$loc"]["dt"] = zc
     end
     new_config
 end

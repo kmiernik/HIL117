@@ -22,11 +22,11 @@ comment = ""
 	neda_low = 70.0
 	dia_low = 100.0
 	beam_period = 74.0
-	ge_dt = 148.0
+	ge_dt = 128.0
 	bgo_dt = 54.0
-	neda_g_dt = 17.0
-	neda_n_dt = 37.0
-	dia_dt = 54.0
+	neda_g_dt = 10.0
+	neda_n_dt = 10.0
+	dia_dt = 128.0
 	t_delay = 20.0
 
 [pid]
