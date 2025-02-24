@@ -180,7 +180,7 @@ function prescan(data_dir, config::Dict;
             try
                 hits = read_aggregate(cfin, config)
             catch err
-                throw(err)
+                println(err)
             end
             if size(hits)[1] > 0
                 t_caen = hits[end].ts

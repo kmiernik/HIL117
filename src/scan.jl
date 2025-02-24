@@ -443,7 +443,7 @@ function scan_run(data_dir, config::Dict, prefix;
             try
                 hits = read_aggregate(cfin, config)
             catch err
-                throw(err)
+                println(err)
             end
             if size(hits)[1] > 0
                 t_caen = hits[end].ts
@@ -546,12 +546,24 @@ function scan_run(data_dir, config::Dict, prefix;
         println()
         close(specfile)
     end
+    println("\u25CF Done run $run_number ")
 
     return 0
 end
 
 
+"""
+    scan_all(dirname, configfile; use_configs=false, n_prescan=2,
+                                      skipruns=Int64[])
 
+    dirname - base directory with data (in subdirectories, per each run)
+    configfile - base config file, see below
+    use_configs - if true a config directory will be search for config
+                  per run e.g. config_012.toml (no prescan will be used).
+                  If not found base config + prescan will be run
+    n_prescan - see `scan_run`
+    skipruns  - run numbers to be ommitted
+"""
 function scan_all(dirname, configfile; use_configs=false, n_prescan=2,
                                       skipruns=Int64[])
     dirs = readdir(dirname, join=true)
