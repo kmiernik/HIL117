@@ -61,44 +61,38 @@ end
 function plot_shifts(df)
     set_theme!(Theme(
                Axis = (
-                   xlabelsize = 12, 
-                   xticklabelsize = 12, 
+                   xlabelsize = 20, 
+                   xticklabelsize = 20, 
                    xminorticks = IntervalsBetween(5), 
                    xminorticksvisible = true, 
                    xgridvisible = false,
-                   ylabelsize = 12, 
-                   yticklabelsize = 12, 
+                   ylabelsize = 20, 
+                   yticklabelsize = 20, 
                    ygridvisible = false, 
                    yminorticks = IntervalsBetween(5), 
                    yminorticksvisible = true,),
                     Legend = (
-                        labelsize = 12,
+                        labelsize = 20,
                   )))
-    df = df[df.run .> 27, :]
+    df = df[(df.run .> 27) .& (df.run .< 200), :]
     #=
-    fig = Figure(size=(800, 800))
-    for loc in 1:2:32
-        c = round(Int, loc/2, RoundUp)
-        ix = round(Int, (c-1)/4, RoundDown)+1
-        iy = (c-1)%4+1
-        ax = Axis(fig[ix, iy], title="$loc")
-        x1 = findfirst(x->x>=28, runs)
-        ym = median(ge_ch[loc][x1:end])
-        stem!(ax, runs, ge_ch[loc] .- ym)
-        xlims!(ax, 28, 50)
-        ylims!(ax, -2, 2)
-    end
-    fig
-    =#
     fig = Figure(size=(800, 800))
     for loc in [1:2:14; 17:2:32]
         c = round(Int, loc/2, RoundUp)
         ix = round(Int, (c-1)/4, RoundDown)+1
         iy = (c-1)%4+1
         ax = Axis(fig[ix, iy], title="$loc", xticklabelrotation=45.0) 
-        ym = mean(df[!, "t_$loc"])
-        stem!(ax, df.start, df[!, "t_$loc"] .- ym)
-        ylims!(ax, -20, 20)
+        ym = df[df.run .== 28, "t_$loc"]
+        scatter!(ax, df.start, df[!, "t_$loc"] .- ym)
+        ylims!(ax, -20, 40)
+    end
+    =#
+    fig = Figure(size=(1000, 600))
+    ax = Axis(fig[1, 1], xticklabelrotation=45.0, ylabel="ΔT (ns)")
+    for loc in [1:2:14; 17:2:32]
+        ym = df[df.run .== 28, "t_$loc"]
+        scatterlines!(ax, df.start, df[!, "t_$loc"] .- ym, linestyle=:dash)
+        ylims!(ax, -20, 40)
     end
     fig
 
@@ -108,29 +102,27 @@ end
 function plot_energies(df)
     set_theme!(Theme(
                Axis = (
-                   xlabelsize = 12, 
-                   xticklabelsize = 12, 
+                   xlabelsize = 20, 
+                   xticklabelsize = 20, 
                    xminorticks = IntervalsBetween(5), 
                    xminorticksvisible = true, 
                    xgridvisible = false,
-                   ylabelsize = 12, 
-                   yticklabelsize = 12, 
+                   ylabelsize = 20, 
+                   yticklabelsize = 20, 
                    ygridvisible = false, 
                    yminorticks = IntervalsBetween(5), 
                    yminorticksvisible = true,),
                     Legend = (
-                        labelsize = 12,
+                        labelsize = 20,
                   )))
-    df = df[df.run .> 27, :]
-    fig = Figure(size=(800, 800))
+    df = df[(df.run .> 27) .& (df.run .< 200), :]
+    fig = Figure(size=(1000, 600))
+    ax = Axis(fig[1, 1], xticklabelrotation=45.0, ylabel="ΔE (keV)", 
+              title="Ch 6000")
     for loc in [1:2:14; 17:2:32]
-        c = round(Int, loc/2, RoundUp)
-        ix = round(Int, (c-1)/4, RoundDown)+1
-        iy = (c-1)%4+1
-        ax = Axis(fig[ix, iy], title="$loc", xticklabelrotation=45.0) 
-        ym = median(df[!, "E_$loc"])
-        stem!(ax, df.start, df[!, "E_$loc"] .- ym)
-        ylims!(ax, -2, 2)
+        ym = df[df.run .== 28, "E_$loc"]
+        scatterlines!(ax, df.start, df[!, "E_$loc"] .- ym, linestyle=:dash)
+        ylims!(ax, -3, 3)
     end
     fig
 

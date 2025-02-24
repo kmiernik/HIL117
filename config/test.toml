@@ -27,7 +27,7 @@ comment = ""
 	neda_g_dt = 500.0
 	neda_n_dt = 500.0
 	dia_dt = 500.0
-	t_delay = 100.0
+	t_delay = 50.0
 
 [pid]
 	g_low = 0.71

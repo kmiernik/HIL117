@@ -307,10 +307,77 @@ function modify_config_bulk()
 	filter!(x->startswith(basename(x), "config_"), files)
 	for file in files
 	    config = TOML.parsefile(file)
-	    config["event"]["t_delay"] = 20.0
-	    config["calibration"] = Dict{String, Any}()
-	    config["calibration"]["E1"] = 511.0
-	    config["calibration"]["E2"] = 1256.69
+	    config["event"]["dia_dt"] = 128.0
+	    #config["calibration"] = Dict{String, Any}()
+	    #config["calibration"]["E1"] = 511.0
+	    #config["calibration"]["E2"] = 1256.69
 	    nicetoml(config, file)
 	end
 end
+
+
+"""
+    sum_spectra(data_dir, sumfilename; prefix="", runs=Int64[])
+
+    Add all spectra in 'data_dir' into new file 'sumfilename'. The new file
+    keeps the structure of spectra files.
+    * prefix - default="", files name prefix , e.g. "run_19_s.h5" - "run_" 
+    * runs - default=[], if empty list it will use all files; if some values
+        are given (array of Int64) it will scan only the given files
+"""
+function sum_spectra(data_dir, sumfilename; prefix="", skip=Int64[])
+
+    data_path = readdir(data_dir, join=true)
+    filter!(p->endswith(p, "_s.h5"), data_path)
+    filter!(p->startswith(split(p, '/')[end], prefix), data_path)
+    if length(skip) > 0
+        filter!(p -> (isnothing(tryparse(Int64, replace(split(data_path[1], '/')[end], "_s.h5"=>"", ""=>"")))) || !(parse(Int64, replace(split(data_path[1], '/')[end], "_s.h5"=>"", ""=>"")) in skip), data_path)
+    end
+    fn = length(data_path)
+
+    if fn == 0
+        return fn
+    end
+
+    prog = Progress(length(data_path); dt=1.0, desc="Summing files ", barlen=30)
+
+    if !isfile(sumfilename)
+        fout = h5open(sumfilename, "w")
+        fin = h5open(data_path[1], "r")
+        for key in keys(fin)
+            inattr = attrs(fin[key])
+            indset = fin[key]
+            
+            create_dataset(fout, key, datatype(fin[key]), size(indset))
+            outdset = fout[key]
+            for at_key in inattr
+                attributes(outdset)[at_key.first] = at_key.second
+            end
+        end
+        close(fin)
+        close(fout)
+    end
+    fout = h5open(sumfilename, "r+")
+
+    i_file = 1
+    for path in data_path
+        fin = h5open(path, "r")
+        for key in keys(fin)
+            indset = fin[key]
+            outdset = fout[key]
+
+            indata = read(indset)
+            outdata = read(outdset)
+            outdata[:, :] .+= indata[:, :]
+            outdset[:, :] = outdata[:, :]
+            GC.gc()
+        end
+        close(fin)
+        update!(prog, i_file)
+        i_file += 1
+    end
+    close(fout)
+    return fn
+end
+
+

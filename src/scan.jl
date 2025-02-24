@@ -66,6 +66,19 @@ end
 function prepare_spectra_file(config, spectranameout, pars)
     fout = h5open(spectranameout, "w")
 
+    eventpars = ["ge_low", "bgo_low", "neda_low", "dia_low", "beam_period", 
+                "ge_dt", "bgo_dt", "neda_g_dt", "neda_n_dt", "dia_dt",
+                "t_delay"]
+    for par in eventpars
+        HDF5.attributes(fout)[par] = config["event"][par]
+    end
+
+    pidpars = ["g_low", "g_high", "n_low", "n_high",
+               "a_low", "a_high", "p_low", "p_high"]
+    for par in pidpars
+        HDF5.attributes(fout)[par] = config["pid"][par]
+    end
+
     data = zeros(UInt32, 
                  size(0:pars.dE:pars.Emax)[1]-1, 
                  size(1:pars.Mmax)[1]-1)

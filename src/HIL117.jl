@@ -19,6 +19,7 @@ include("caendat.jl")
 include("diadat.jl")
 
 include("tools.jl")
+export sum_spectra
 
 include("prescan.jl")
 
