@@ -111,7 +111,9 @@ function prescan(data_dir, config::Dict;
             try
                 hits = read_aggregate(fin, config)
             catch err
-                break
+                msg = @sprintf("File %s is possibly corrupted at position %d. Skipping rest of the file.", filename, position(fin)) 
+                @warn msg
+                seekend(fin)
             end
             for hit in hits
                 n_hits += 1
@@ -180,7 +182,9 @@ function prescan(data_dir, config::Dict;
             try
                 hits = read_aggregate(cfin, config)
             catch err
-                println(err)
+                msg = @sprintf("File %s is possibly corrupted at position %d. Skipping rest of the file.", files_caen[i_caen], position(cfin)) 
+                @warn msg
+                seekend(cfin)
             end
             if size(hits)[1] > 0
                 t_caen = hits[end].ts
@@ -190,7 +194,9 @@ function prescan(data_dir, config::Dict;
                 hits = read_diahit(dfin, agava_ts, 100)
             catch err
                 if !eof(dfin)
-                    throw(err)
+                    msg = @sprintf("File %s is possibly corrupted at position %d. Skipping rest of the file.", files_dia[i_dia], position(dfin)) 
+                    @warn msg
+                    seekend(dfin)
                 end
             end
             if size(hits)[1] > 0

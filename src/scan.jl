@@ -443,7 +443,9 @@ function scan_run(data_dir, config::Dict, prefix;
             try
                 hits = read_aggregate(cfin, config)
             catch err
-                println(err)
+                msg = @sprintf("File %s is possibly corrupted at position %d. Skipping rest of the file.", files_caen[i_caen], position(cfin)) 
+                @warn msg
+                seekend(cfin)
             end
             if size(hits)[1] > 0
                 t_caen = hits[end].ts
@@ -453,7 +455,9 @@ function scan_run(data_dir, config::Dict, prefix;
                 hits = read_diahit(dfin, agava_ts, dia_buf)
             catch err
                 if !eof(dfin)
-                    throw(err)
+                    msg = @sprintf("File %s is possibly corrupted at position %d. Skipping rest of the file.", files_dia[i_dia], position(dfin)) 
+                    @warn msg
+                    seekend(dfin)
                 end
             end
             if size(hits)[1] > 0
