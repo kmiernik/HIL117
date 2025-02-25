@@ -1,4 +1,66 @@
 """
+    lin(x, p)
+
+    Linear function
+        p[1] + p[2] * x
+"""
+function lin(x, p)
+    @. p[1] + p[2] * x
+end
+
+
+"""
+    quad(x, p)
+
+    Quadratic function
+        p[1] + p[2] * x + p[3] * x^2
+"""
+function quad(x, p)
+    @. p[1] + p[2] * x + p[3] * x^2
+end
+
+
+"""
+    gauss(x, p)
+
+    Gaussian shape function with linear background
+    (p[1] / sqrt(2 * pi * p[3]^2) * exp(-(x - p[2])^2 / (2 * p[3]^2)) 
+
+    * p[1]: Area (A)
+    * p[2]: Mean (μ)
+    * p[3]: Deviation (σ)
+"""
+function gauss(x, p)
+    @. p[1] / sqrt(2 * pi * p[3]^2) * exp(-(x - p[2])^2 / (2 * p[3]^2)) 
+end
+
+
+"""
+    gausslin(x, p)
+
+    Gaussian shape function with linear background
+"""
+function gausslin(x, p)
+    gauss(x, p[1:3]) .+ p[4] .+ p[5] * x
+end
+
+
+"""
+    rebin(data, bins)
+    
+    Rebin 1-D data using bin size `bins`
+"""
+function rebin(data, bins)
+    sy = round(Int64, size(data)[1] / bins, RoundUp)
+    datac = copy(data)
+    if sy * bins > size(data)[1]
+        append!(datac, zeros(eltype(data), sy * bins - size(data)[1]))
+    end
+    collect(mean(reshape(datac, (bins, round(Int64, sy))), dims=1)')
+end
+
+
+"""
     bareconfig(tomlfile)
     Create bare TOML config file
     
