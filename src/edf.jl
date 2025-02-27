@@ -112,14 +112,16 @@ end
 
 
 """
-    event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
+    event_builder!(chunk, last_event, eventpars, specpars, 
+                        edffile::IO;
                        valid_table, cal_table, shift_table,
                        type_table, distance_table, pidpars)
 
     Keeps last event in chunk, swaps it to the front,
     returns i_chunk (position of last unused hit in chunk)
 """
-function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
+function event_builder!(chunk, last_event, eventpars, specpars, 
+                        edffile::IO;
                        valid_table, cal_table, shift_table,
                        type_table, distance_table, pidpars)
     d_target_neda = 1.0
@@ -134,24 +136,27 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
             continue
         end
         t = rawhit.ts * 4 + rawhit.tf / 256 - shift_table[loc]
-        if type_table[loc] != NEDA
-            E = lin(rawhit.E, cal_table[:, loc]) + rand() - 0.5
+        if type_table[loc] !== NEDA
+            t += eventpars.t_delay
+        end
+        if type_table[loc] == GE
+            E = lin(rawhit.E, cal_table[:, loc]) + 0.5 * rand() - 0.25
         else
             E = Float64(rawhit.E)
         end
-        iE = round(Int64, E / specpars.dE, RoundDown)
+        iE = round(Int64, E / specpars.dE, RoundUp)
         if type_table[loc] == GE
-            if E < specpars.ge_low
+            if E < eventpars.ge_low
                 continue
             end
             push!(hits, Hit(UInt8(loc), E, t, 0.0, GAMMA))
         elseif type_table[loc] == BGO
-            if rawhit.E < specpars.bgo_low
+            if rawhit.E < eventpars.bgo_low
                 continue
             end
             push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, GAMMA))
         elseif type_table[loc] == NEDA
-            if E < specpars.neda_low
+            if E < eventpars.neda_low
                 continue
             end
             pid = (Float64(rawhit.qshort) + randn()) / E
@@ -169,7 +174,10 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
                 t_last_neda_g = t
             end
         elseif type_table[loc] == DIAMANT
-            E = Float64(rawhit.E)
+            if E < eventpars.dia_low
+                continue
+            end
+            t += (rand() - 0.5) * 5.0 
             T = Float64(rawhit.qshort)
             pid = (T / E 
                 - cal_table[1, loc] / E^2 
@@ -187,10 +195,40 @@ function event_builder!(chunk, last_event, edffile::IO, specpars, t_event;
 
     event = [1]
     for i in 2:n_hits
-        if hits[i].t - hits[event[1]].t < t_event
-            push!(event, i)
-        else
-            update_spectra!(event, hits, edffile, type_table, distance_table, specpars)
+        closeevent = false
+        if type_table[hits[i].loc] == NEDA && hits[i].pid == GAMMA
+            if hits[i].t - hits[event[1]].t < eventpars.neda_g_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        elseif type_table[hits[i].loc] == NEDA && hits[i].pid == NEUTRON
+            if hits[i].t - hits[event[1]].t < eventpars.neda_n_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        elseif hits[i].pid == PROTON || hits[i].pid == ALPHA
+            if hits[i].t - hits[event[1]].t < eventpars.dia_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        elseif type_table[hits[i].loc] == GE && hits[i].pid == GAMMA
+            if hits[i].t - hits[event[1]].t < eventpars.ge_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        elseif type_table[hits[i].loc] ==  BGO
+            if hits[i].t - hits[event[1]].t < eventpars.bgo_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        end
+        if closeevent
+            update_spectra!(event, hits, edffile, type_table, distance_table)
             event = [i]
         end
     end
@@ -205,7 +243,7 @@ end
 
 
 
-function update_spectra!(event, hits, edffile::IO, type_table, distance_table, specpars)
+function update_spectra!(event, hits, edffile::IO, type_table, distance_table)
     Mraw = length(event)
     scattering!(event, hits, type_table, distance_table)
     M = length(event)

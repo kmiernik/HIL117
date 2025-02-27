@@ -119,11 +119,23 @@ function plot_energies(df)
     fig = Figure(size=(1000, 600))
     ax = Axis(fig[1, 1], xticklabelrotation=45.0, ylabel="ΔE (keV)", 
               title="Ch 6000")
+    dys = Float64[]
     for loc in [1:2:14; 17:2:32]
         ym = df[df.run .== 28, "E_$loc"]
-        scatterlines!(ax, df.start, df[!, "E_$loc"] .- ym, linestyle=:dash)
+        dy = df[!, "E_$loc"] .- ym
+        scatterlines!(ax, df.start, dy, linestyle=:dash)
+        push!(dys, dy...)
         ylims!(ax, -3, 3)
     end
+    h = fit(Histogram, dys, -3:0.1:3)
+    ax2 = Axis(fig[1, 2], yaxisposition=:right, xreversed=true, 
+               ylabel="ΔE (keV)")
+    stairs!(ax2, h.weights, h.edges[1][1:end-1])
+    lines!(ax2, cumsum(h.weights) ./ sum(h.weights) .* 400, 
+           h.edges[1][1:end-1], color=:black, linestyle=:dash)
+    ylims!(ax2, -3, 3)
+    xlims!(400, 0)
+    colsize!(fig.layout, 2, Relative(1/3))
     fig
 
 end

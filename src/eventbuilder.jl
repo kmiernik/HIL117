@@ -6,7 +6,8 @@
     Keeps last event in chunk, swaps it to the front,
     returns i_chunk (position of last unused hit in chunk)
 """
-function event_builder!(chunk, last_event, eventpars, specpars, spectra::NamedTuple;
+function event_builder!(chunk, last_event, eventpars, specpars, 
+                        spectra::NamedTuple;
                        valid_table, cal_table, shift_table,
                        type_table, distance_table, pidpars)
     d_target_neda = 1.0

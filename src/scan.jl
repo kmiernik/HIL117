@@ -313,6 +313,9 @@ end
 """
     scan_run(data_dir, config::Dict, prefix; 
              chunk_size=10_000, dia_buf=100, n_prescan=2)
+    scan_run(data_dir, config::Dict, prefix;
+                    chunk_size=100_000, dia_buf=100, n_prescan=2, edfmode=false,
+                    saveconfig=false)
 
     Scan run pointed by data_dir (notice that both caendat and diamant files
     must be present).
@@ -470,7 +473,7 @@ function scan_run(data_dir, config::Dict, prefix;
 
             if i_chunk > chunk_size
                 if edfmode
-                    last_event = event_builder!(chunk, last_event,
+                    last_event = event_builder!(chunk, last_event, 
                                                 eventpars, specpars, edffile;
                                                 valid_table=valid_table, 
                                                 cal_table=cal_table,
@@ -478,7 +481,6 @@ function scan_run(data_dir, config::Dict, prefix;
                                                 type_table=type_table,
                                                 distance_table=distance_table,
                                                 pidpars=pidpars)
-
                 else
                     last_event = event_builder!(chunk, last_event, 
                                                 eventpars, specpars, spectra;
