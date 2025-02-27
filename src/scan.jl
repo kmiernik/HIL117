@@ -568,10 +568,12 @@ end
                   per run e.g. config_012.toml (no prescan will be used).
                   If not found base config + prescan will be run
     n_prescan - see `scan_run`
-    skipruns  - run numbers to be ommitted
+    skipruns  - run numbers to be ommitted, default skipruns is based on 
+                elog entries are removes bad data, short runs, test runs, 
+                decay runs etc.
 """
 function scan_all(dirname, configfile; use_configs=false, n_prescan=2,
-                                      skipruns=Int64[])
+        skipruns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 26, 27, 33, 50, 72, 83, 85, 161, 162, 190, 194, 197, 198, 199, 200, 201, 202, 203, 300, 301])
     dirs = readdir(dirname, join=true)
     scan_dirs = String[]
     scan_confs = String[]

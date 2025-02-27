@@ -164,3 +164,22 @@ instead of, which might require some
  [C++ wrapper](https://github.com/JuliaInterop/CxxWrap.jl?tab=readme-ov-file),
  or using scheme suggested by the Julian library for reading ROOT data -
  [UnROOT](https://juliahep.github.io/UnROOT.jl/stable/exampleusage/).
+
+# Installation
+
+Obtain Julia. In Linux you may use your distribution package manager.
+In case you don't have administrator privileges, or using different
+OS just download binaries from 
+[julialang.org](https://julialang.org/downloads/) and follow instructions.
+
+Run julia in the command line interface in the HIL117 directory, and run 
+the following commands in Julia
+
+```julia
+julia> using Pkg
+julia> Pkg.activate(".")
+julia> Pkg.instantiate()
+julia> using HIL117
+```
+
+Now your are ready to scan the data!

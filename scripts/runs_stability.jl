@@ -25,6 +25,7 @@ pub_theme = Theme(
 
 function load_data(ref_ch=6000)
     rf = DataFrame(CSV.File("hil117_runs.csv"))
+    cf = DataFrame(CSV.File("hil117_1257.csv"))
 
     runs = Int64[]
     ge_ch = Dict{Int64, Vector{Float64}}()
@@ -54,7 +55,8 @@ function load_data(ref_ch=6000)
         df[!, "E_$loc"] = ge_ch[loc]
         df[!, "t_$loc"] = ge_t[loc]
     end
-    innerjoin(df, rf, on=:run)
+    df = innerjoin(df, rf, on=:run)
+    df = innerjoin(df, cf, on=:run)
 end
 
 
