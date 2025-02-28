@@ -8,8 +8,10 @@ comment = ""
 
 [spectra]
 	dE = 1.0
-	Emax = 4096.0
-	E2max = 2560.0
+	Emax = 5120.0
+	E2max = 3072.0
+	dE3 = 2.0
+    E3max = 3072.0
 	dt = 1.0
 	tmax = 255.0
 	dpid = 0.01

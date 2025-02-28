@@ -255,13 +255,14 @@ function update_spectra!(event, hits, spectra::NamedTuple, type_table, distance_
 
     for j in 1:M
         jloc = hits[event[j]].loc
+        Ej = hits[event[j]].E
         if type_table[jloc] != GE
             continue
         end
-        jE = round(Int64, hits[event[j]].E / specpars.dE, RoundUp)
-        if jE < 1 || jE > specpars.Emax
+        if Ej < 1 || Ej > specpars.Emax
             continue
         end
+        jE = round(Int64, Ej / specpars.dE, RoundUp)
         if neutrons == 0 && protons == 0 && alphas == 0
             spectra.gP[jE, 1] += 1
         end
@@ -279,15 +280,16 @@ function update_spectra!(event, hits, spectra::NamedTuple, type_table, distance_
         else
             spectra.gM[jE, specpars.Mmax-1] += 1
         end
-        if 1 <= jE <= specpars.E2max 
+        if 1 <= Ej <= specpars.E2max 
             for k in j+1:M
                 kloc = hits[event[k]].loc
                 if type_table[kloc] != GE
                     continue
                 end
-                kE = round(Int64, 
-                            hits[event[k]].E / specpars.dE, RoundUp)
-                if 1 <= kE <= specpars.E2max
+                Ek = hits[event[k]].E
+                if 1 <= Ek <= specpars.E2max
+                    kE = round(Int64, 
+                                hits[event[k]].E / specpars.dE, RoundUp)
                     spectra.gg[jE, kE] += 1
                     spectra.gg[kE, jE] += 1
                     if protons > 0
@@ -301,6 +303,21 @@ function update_spectra!(event, hits, spectra::NamedTuple, type_table, distance_
                     if alphas == 0
                         spectra.gg_no_alpha[jE, kE] += 1
                         spectra.gg_no_alpha[kE, jE] += 1
+                    end
+                end
+                for m in k+1:M
+                    mloc = hits[event[m]].loc
+                    if type_table[mloc] != GE
+                        continue
+                    end
+                    Em = hits[event[m]].E
+                    if (   Ej <= specpars.E3max && Ek <= specpars.E3max
+                        && 1 <= Em <= specpars.E3max)
+                        j3E = round(Int64, Ej / specpars.dE3, RoundUp)
+                        k3E = round(Int64, Ek / specpars.dE3, RoundUp)
+                        m3E = round(Int64, Em / specpars.dE3, RoundUp)
+                        ic = icube(sort([j3E, k3E, m3E])...)
+                        spectra.ggg_prompt[ic] += 1
                     end
                 end
             end

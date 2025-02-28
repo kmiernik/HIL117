@@ -222,6 +222,19 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = 1
     HDF5.attributes(dset)["ymax"] = pars.Mmax
 
+    k = round(Int64, pars.E3max / pars.dE3)
+    n = round(Int64, k * (k + 1) * (k + 2) / 6)
+    data = zeros(UInt16, n, 1)
+
+    write(fout, "ggg_prompt", data)
+    dset = fout["ggg_prompt"]
+    attributes(dset)["xmin"] = 0.0
+    attributes(dset)["dx"] = 1.0
+    attributes(dset)["xmax"] = n
+    attributes(dset)["ymin"] = 0.0
+    attributes(dset)["dy"] = 1.0
+    attributes(dset)["ymax"] = 1.0
+
     close(fout)
     println("    \u25E6 spectra file ", spectranameout, " created")
 end

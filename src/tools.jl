@@ -208,8 +208,8 @@ function nicetoml(config, tomlfile, additional_comment="")
     print(fout, "\n")
 
     print(fout, "[spectra]\n")
-    specnames = ["dE", "Emax", "E2max", "dt", "tmax", "dpid", "pidmax",
-                "Mmax"]
+    specnames = ["dE", "Emax", "E2max", "dE3", "E3max",
+                 "dt", "tmax", "dpid", "pidmax", "Mmax"]
     for par in specnames
         print(fout, "\t$par = ", config["spectra"][par], "\n")
     end
@@ -369,7 +369,11 @@ function modify_config_bulk()
 	filter!(x->startswith(basename(x), "config_"), files)
 	for file in files
 	    config = TOML.parsefile(file)
-	    config["event"]["dia_dt"] = 128.0
+	    config["spectra"]["Emax"] = 5120.0
+	    config["spectra"]["E2max"] = 3072.0
+	    config["spectra"]["dE3"] = 2.0
+	    config["spectra"]["E3max"] = 3072.0
+
 	    #config["calibration"] = Dict{String, Any}()
 	    #config["calibration"]["E1"] = 511.0
 	    #config["calibration"]["E2"] = 1256.69

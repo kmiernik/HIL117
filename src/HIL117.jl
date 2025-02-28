@@ -20,6 +20,8 @@ include("diadat.jl")
 include("tools.jl")
 export sum_spectra
 
+include("cubes.jl")
+
 include("prescan.jl")
 
 include("edf.jl")

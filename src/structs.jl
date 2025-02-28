@@ -120,6 +120,8 @@ struct SpectraPars
     dE::Float64
     Emax::Float64
     E2max::Float64
+    dE3::Float64
+    E3max::Float64
     dt::Float64
     tmax::Float64
     dpid::Float64
@@ -133,6 +135,8 @@ function SpectraPars(config::Dict{String, Any})
     SpectraPars(config["spectra"]["dE"],
                 config["spectra"]["Emax"],
                 config["spectra"]["E2max"],
+                config["spectra"]["dE3"],
+                config["spectra"]["E3max"],
                 config["spectra"]["dt"],
                 config["spectra"]["tmax"],
                 config["spectra"]["dpid"],
