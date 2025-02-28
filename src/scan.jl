@@ -79,7 +79,7 @@ function prepare_spectra_file(config, spectranameout, pars)
         HDF5.attributes(fout)[par] = config["pid"][par]
     end
 
-    data = zeros(UInt32, 
+    data = zeros(UInt64, 
                  size(0:pars.dE:pars.Emax)[1]-1, 
                  size(1:pars.Mmax)[1]-1)
 
@@ -102,7 +102,7 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = 1
     HDF5.attributes(dset)["ymax"] = pars.Mmax
 
-    data = zeros(UInt32, size(0:pars.dE:pars.Emax)[1]-1, 4)
+    data = zeros(UInt64, size(0:pars.dE:pars.Emax)[1]-1, 4)
     write(fout, "partE", data)
     dset = fout["partE"]
     HDF5.attributes(dset)["xmin"] = 0.0
@@ -112,7 +112,7 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = 1
     HDF5.attributes(dset)["ymax"] = 4
 
-    data = zeros(UInt32, 
+    data = zeros(UInt64, 
                  size(0:pars.dE:pars.Emax)[1]-1,
                  size(1:pars.last_label)[1])
     write(fout, "Eloc", data)
@@ -124,7 +124,7 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = 1
     HDF5.attributes(dset)["ymax"] = pars.last_label+1
 
-    data = zeros(UInt32,
+    data = zeros(UInt64,
                  size(0:pars.dt:pars.tmax)[1]-1, 
                  size(1:pars.last_label)[1])
     write(fout, "tloc", data)

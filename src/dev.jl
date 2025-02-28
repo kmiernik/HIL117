@@ -1,40 +1,18 @@
 #=
+These are develpment function not intended to be used
+
 Notes
 -----
 
-1. test_co60() - data read test 
-2. init_cal() - rough calibration with Co-60
-2a. scan_raw_ge() - scan whole runs, only 16x16384 table for ge detectors
-3. cal_energy() - calibration with Eu-152 source
-4. test_walk() - walk correction per channel - not needed, no dependency
-                of time shift on energy; different methods tested, e.g.
-                Co60 coincidence, (one 1332, one 1173 or lower), Eu-152, etc.
-5. find_shift_table() - calculates shift table for each channel relative to 
+* scan_raw_ge() - scan whole runs, only 16x16384 table for ge detectors
+* cal_energy() - calibration with Eu-152 source
+* find_walk() - walk correction also pid-time
+* find_shift_table() - calculates shift table for each channel relative to 
                     the selected NEDA detector
-6. find_shift() - time shifts for each channel based on shift table
-7. find_period() - beam period based on shift table
+* find_shift() - time shifts for each channel based on shift table
+* find_period() - beam period based on shift table
 
 =#
-
-function test_co60()
-    data = read_raw_data("data/needleRU_i1329_0004_0000.caendat"; n_agg=100000)
-
-    spectra = Dict{Int, Dict{Int, Vector{Int64}}}()
-    for board in 0:5
-        chans = Dict{Int, Vector{Int64}}()
-        for ch in 0:15
-            chans[ch] = zeros(Int64, 16384)
-        end
-        spectra[board] = chans
-    end
-
-    for hit in data
-        if 1 < hit.E <= 16384
-            spectra[hit.board][hit.ch][hit.E] += 1
-        end
-    end
-    spectra
-end
 
 
 function scan_raw_ge(dirname, configfile; file_numbers=[], chmax=32768)
@@ -353,18 +331,18 @@ function cal_energy(filename, configfile)
 end
 
 
-function test_walk(data_dir, configfile::String; args...)
+function find_walk(data_dir, configfile::String; args...)
     config = TOML.parsefile(configfile)
-    test_walk(data_dir, config; args...)
+    find_walk(data_dir, config; args...)
 end
 
 """
     ΔT vs. E of a given detector
-    for DIAMANT ΔT vs. PID
+    for DIAMANT and NEDA ΔT vs. PID
 
     Testing time widths and walk
 """
-function test_walk(data_dir, config::Dict; 
+function find_walk(data_dir, config::Dict; 
                 n_files=2, ref_label=34, dE=8, Emax=16384, Estartmin=100, 
                                     dt_min=-99.0, dt_max=900.0, dt=1.0)
 

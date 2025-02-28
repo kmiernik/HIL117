@@ -6,5 +6,5 @@ using LsqFit
 using TOML
 using StatsBase
 
-include("test_dets.jl")
-include("test_prescan.jl")
+include("setup_dets.jl")
+include("setup_prescan.jl")

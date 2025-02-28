@@ -379,7 +379,8 @@ end
 
 
 """
-    sum_spectra(data_dir, sumfilename; prefix="", runs=Int64[])
+    sum_spectra(data_dir, sumfilename; prefix="",
+        skip=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 26, 27, 33, 50, 72, 83, 85, 161, 162, 190, 194, 197, 198, 199, 200, 201, 202, 203, 300, 301])
 
     Add all spectra in 'data_dir' into new file 'sumfilename'. The new file
     keeps the structure of spectra files.
@@ -387,7 +388,8 @@ end
     * runs - default=[], if empty list it will use all files; if some values
         are given (array of Int64) it will scan only the given files
 """
-function sum_spectra(data_dir, sumfilename; prefix="", skip=Int64[])
+function sum_spectra(data_dir, sumfilename; prefix="",
+        skip=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 26, 27, 33, 50, 72, 83, 85, 161, 162, 190, 194, 197, 198, 199, 200, 201, 202, 203, 300, 301])
 
     data_path = readdir(data_dir, join=true)
     filter!(p->endswith(p, "_s.h5"), data_path)
