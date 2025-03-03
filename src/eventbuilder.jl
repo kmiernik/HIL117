@@ -38,12 +38,12 @@ function event_builder!(chunk, last_event, eventpars, specpars,
             if E < eventpars.ge_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), E, t, 0.0, GAMMA))
+            push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(GAMMA)))
         elseif type_table[loc] == BGO
             if rawhit.E < eventpars.bgo_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, GAMMA))
+            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, Int8(GAMMA)))
         elseif type_table[loc] == NEDA
             if E < eventpars.neda_low
                 continue
@@ -64,11 +64,11 @@ function event_builder!(chunk, last_event, eventpars, specpars,
                 E = (5227.121 * (d_target_neda / tof)^2) * 1000 + randn()
                 if E > 0.0 && !isinf(E) 
                     push!(hits, Hit(UInt8(loc), E, t_last_neda_g, 
-                                    tof, NEUTRON))
+                                    tof, Int8(NEUTRON)))
                 end
             elseif (E > cal_table[1, loc] 
                     && pidpars.g_low <= pid < pidpars.g_high)
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, GAMMA))
+                push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(GAMMA)))
                 t_last_neda_g = t
             end
         elseif type_table[loc] == DIAMANT
@@ -86,9 +86,9 @@ function event_builder!(chunk, last_event, eventpars, specpars,
                 spectra.dia_pid[iE, ip] += 1
             end
             if pidpars.a_low < pid <= pidpars.a_high
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, ALPHA))
+                push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(ALPHA)))
             elseif pidpars.p_low < pid <= pidpars.p_high
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, PROTON))
+                push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(PROTON)))
             end
         end
     end
@@ -98,25 +98,29 @@ function event_builder!(chunk, last_event, eventpars, specpars,
     event = [1]
     for i in 2:n_hits
         closeevent = false
-        if type_table[hits[i].loc] == NEDA && hits[i].pid == GAMMA
+        if (type_table[hits[i].loc] == NEDA 
+            && ParticleType(hits[i].pid) == GAMMA)
             if hits[i].t - hits[event[1]].t < eventpars.neda_g_dt
                 push!(event, i)
             else
                 closeevent = true
             end
-        elseif type_table[hits[i].loc] == NEDA && hits[i].pid == NEUTRON
+        elseif (type_table[hits[i].loc] == NEDA 
+                && ParticleType(hits[i].pid) == NEUTRON)
             if hits[i].t - hits[event[1]].t < eventpars.neda_n_dt
                 push!(event, i)
             else
                 closeevent = true
             end
-        elseif hits[i].pid == PROTON || hits[i].pid == ALPHA
+        elseif (ParticleType(hits[i].pid) == PROTON
+                || ParticleType(hits[i].pid) == ALPHA)
             if hits[i].t - hits[event[1]].t < eventpars.dia_dt
                 push!(event, i)
             else
                 closeevent = true
             end
-        elseif type_table[hits[i].loc] == GE && hits[i].pid == GAMMA
+        elseif (type_table[hits[i].loc] == GE 
+                && ParticleType(hits[i].pid) == GAMMA)
             if hits[i].t - hits[event[1]].t < eventpars.ge_dt
                 push!(event, i)
             else
@@ -173,18 +177,25 @@ function scattering!(event, hits, type_table, distance_table)
         elseif type_table[hits[event[i]].loc] == NEDA
             for j in i+1:M
                 jloc = hits[event[j]].loc
+                # Wait for proper distance table and check if it makes
+                # any sense to distinguch scattering and normal emision
+                # from common source
+                #=
                 if ( !(j in del_list) 
                      && type_table[jloc] == NEDA
-                     && hits[event[i]].pid == GAMMA
-                     && hits[event[j]].pid == GAMMA
+                     && ((hits[event[i]].pid > 2 && hits[event[j]].pid > 2)
+                         || (hits[event[i]].pid == Int8(GAMMA)
+                             && hits[event[j]].pid == Int8(GAMMA)))
                      && abs(abs(hits[event[i]].t - hits[event[j]].t) 
                             - distance_table[iloc, jloc] / 0.29979 ) < 1.0)
                         push!(del_list, j)
                 end
+                =#
                 if ( !(j in del_list) 
                      && type_table[jloc] == NEDA
-                     && hits[event[i]].pid == NEUTRON
-                     && hits[event[j]].pid == NEUTRON)
+                     && ((hits[event[i]].pid < 0 && hits[event[j]].pid < 0)
+                         || (hits[event[i]].pid == Int8(NEUTRON)
+                             && hits[event[j]].pid == Int8(NEUTRON))))
                     vn = sqrt(2 * hits[event[i]].E / 939565.0) * 0.29979
                     if ( abs(abs(hits[event[i]].tof - hits[event[j]].tof) 
                              - distance_table[iloc, jloc] / vn)  < 1.0)
@@ -222,21 +233,21 @@ function update_spectra!(event, hits, spectra::NamedTuple, type_table, distance_
                 spectra.gP[jE, 1] += 1
             end
         elseif type_table[jloc] == NEDA
-            if hits[event[j]].pid == GAMMA
+            if ParticleType(hits[event[j]].pid) == GAMMA
                 gammas += 1
-            elseif hits[event[j]].pid == NEUTRON
+            elseif ParticleType(hits[event[j]].pid) == NEUTRON
                 neutrons +=1
                 if 1 <= jE <= specpars.Emax
                     spectra.partE[jE, 2] += 1
                 end
             end
         elseif type_table[jloc] == DIAMANT
-            if hits[event[j]].pid == PROTON
+            if ParticleType(hits[event[j]].pid) == PROTON
                 protons +=1
                 if 1 <= jE <= specpars.Emax
                     spectra.partE[jE, 3] += 1
                 end
-            elseif hits[event[j]].pid == ALPHA
+            elseif ParticleType(hits[event[j]].pid) == ALPHA
                 alphas += 1
                 if 1 <= jE <= specpars.Emax
                     spectra.partE[jE, 4] += 1

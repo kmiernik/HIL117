@@ -84,25 +84,30 @@ end
 
 """
     Calibrated/identified Hit
-    pid - particle id see `ParticleType`
+    pid - particle id, for spectra scan see `ParticleType`, for EDF
+          mode pid is 0 for Ge, and calculated PID for NEDA/DIAMANT
+          Values for alpha particles and neutrons are set negative
+          for quick identification
 """
 struct Hit
     loc::UInt8
     E::Float64
     t::Float64
     tof::Float64
-    pid::ParticleType
+    pid::Int8
 end
 
 
 function Hit()
-    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(UInt8))
+    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(Int8))
 end
 
 
 function Base.zero(::Type{Hit})
-    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(UInt8))
+    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(Int8))
 end
+
+
 """
 Parametrs of spectra for scan 
 

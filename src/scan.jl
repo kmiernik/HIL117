@@ -175,7 +175,7 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = pars.dE
     HDF5.attributes(dset)["ymax"] = pars.E2max
 
-    data = zeros(UInt32,
+    data = zeros(UInt64,
                  size(0:pars.dE:pars.Emax)[1]-1,
                  size(0:pars.dpid:pars.pidmax)[1]-1)
 
@@ -197,7 +197,7 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = pars.dpid
     HDF5.attributes(dset)["ymax"] = pars.pidmax
 
-    data = zeros(UInt32,
+    data = zeros(UInt64,
                  size(0:pars.dt:pars.tmax)[1]-1,
                  size(0:pars.dpid:pars.pidmax)[1]-1)
 
@@ -210,7 +210,7 @@ function prepare_spectra_file(config, spectranameout, pars)
     HDF5.attributes(dset)["dy"] = pars.dpid
     HDF5.attributes(dset)["ymax"] = pars.pidmax
 
-    data = zeros(UInt32, 
+    data = zeros(UInt64, 
                  size(0:pars.Mmax)[1]-1,
                  size(0:pars.Mmax)[1]-1)
     write(fout, "MP", data)
@@ -585,7 +585,8 @@ end
                 elog entries are removes bad data, short runs, test runs, 
                 decay runs etc.
 """
-function scan_all(dirname, configfile; use_configs=false, n_prescan=2,
+function scan_all(dirname, configfile; use_configs=false, n_prescan=2, 
+        edfmode=false,
         skipruns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 26, 27, 33, 50, 72, 83, 85, 161, 162, 190, 194, 197, 198, 199, 200, 201, 202, 203, 300, 301])
     dirs = readdir(dirname, join=true)
     scan_dirs = String[]
@@ -619,7 +620,7 @@ function scan_all(dirname, configfile; use_configs=false, n_prescan=2,
             push!(scan_prescans, n_prescan)
         end
     end
-    pmap((d, c, p, r)->scan_run(d, c, p; n_prescan=r), 
+    pmap((d, c, p, r)->scan_run(d, c, p; n_prescan=r, edfmode=edfmode), 
          [d for d in scan_dirs],
          [c for c in scan_confs],
          [p for p in scan_prefixes], 
