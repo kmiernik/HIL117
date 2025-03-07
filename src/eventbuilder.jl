@@ -38,12 +38,12 @@ function event_builder!(chunk, last_event, eventpars, specpars,
             if E < eventpars.ge_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(GAMMA)))
+            push!(hits, Hit(UInt8(loc), E, t, Int8(GAMMA)))
         elseif type_table[loc] == BGO
             if rawhit.E < eventpars.bgo_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, Int8(GAMMA)))
+            push!(hits, Hit(UInt8(loc), rawhit.E, t, Int8(GAMMA)))
         elseif type_table[loc] == NEDA
             if E < eventpars.neda_low
                 continue
@@ -55,20 +55,16 @@ function event_builder!(chunk, last_event, eventpars, specpars,
                 spectra.neda_pid[iE, ip] += 1
             end
             tof = t - t_last_neda_g
-            itof = round(Int64, tof / specpars.dt, RoundUp)
-            if (1 <= itof < specpars.tmax 
+            if (1 <= tof < specpars.tmax 
                 && 1 <= ip < specpars.pidmax / specpars.dpid)
+                itof = round(Int64, tof / specpars.dt, RoundUp)
                 spectra.neda_tof[itof, ip] += 1
             end
             if E > cal_table[2, loc] && pidpars.n_low <= pid < pidpars.n_high
-                E = (5227.121 * (d_target_neda / tof)^2) * 1000 + randn()
-                if E > 0.0 && !isinf(E) 
-                    push!(hits, Hit(UInt8(loc), E, t_last_neda_g, 
-                                    tof, Int8(NEUTRON)))
-                end
+                push!(hits, Hit(UInt8(loc), E, t, Int8(NEUTRON)))
             elseif (E > cal_table[1, loc] 
                     && pidpars.g_low <= pid < pidpars.g_high)
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(GAMMA)))
+                push!(hits, Hit(UInt8(loc), E, t, Int8(GAMMA)))
                 t_last_neda_g = t
             end
         elseif type_table[loc] == DIAMANT
@@ -86,9 +82,9 @@ function event_builder!(chunk, last_event, eventpars, specpars,
                 spectra.dia_pid[iE, ip] += 1
             end
             if pidpars.a_low < pid <= pidpars.a_high
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(ALPHA)))
+                push!(hits, Hit(UInt8(loc), E, t, Int8(ALPHA)))
             elseif pidpars.p_low < pid <= pidpars.p_high
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, Int8(PROTON)))
+                push!(hits, Hit(UInt8(loc), E, t, Int8(PROTON)))
             end
         end
     end
@@ -177,28 +173,14 @@ function scattering!(event, hits, type_table, distance_table)
         elseif type_table[hits[event[i]].loc] == NEDA
             for j in i+1:M
                 jloc = hits[event[j]].loc
-                # Wait for proper distance table and check if it makes
-                # any sense to distinguch scattering and normal emision
-                # from common source
-                #=
-                if ( !(j in del_list) 
-                     && type_table[jloc] == NEDA
-                     && ((hits[event[i]].pid > 2 && hits[event[j]].pid > 2)
-                         || (hits[event[i]].pid == Int8(GAMMA)
-                             && hits[event[j]].pid == Int8(GAMMA)))
-                     && abs(abs(hits[event[i]].t - hits[event[j]].t) 
-                            - distance_table[iloc, jloc] / 0.29979 ) < 1.0)
-                        push!(del_list, j)
-                end
-                =#
                 if ( !(j in del_list) 
                      && type_table[jloc] == NEDA
                      && ((hits[event[i]].pid < 0 && hits[event[j]].pid < 0)
                          || (hits[event[i]].pid == Int8(NEUTRON)
                              && hits[event[j]].pid == Int8(NEUTRON))))
-                    vn = sqrt(2 * hits[event[i]].E / 939565.0) * 0.29979
-                    if ( abs(abs(hits[event[i]].tof - hits[event[j]].tof) 
-                             - distance_table[iloc, jloc] / vn)  < 1.0)
+                    # Neighboring detectors are removed if dt > 2.0 ns
+                    if (0.14 < distance_table[iloc, jloc] < 0.15
+                        &&  abs(hits[event[j]].t - hits[event[i]].t) > 2.0)
                         push!(del_list, j)
                     end
                 end

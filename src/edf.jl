@@ -139,26 +139,22 @@ function event_builder!(chunk, last_event, eventpars, specpars,
             if E < eventpars.ge_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), E, t, 0.0, zero(Int8)))
+            push!(hits, Hit(UInt8(loc), E, t, zero(Int8)))
         elseif type_table[loc] == BGO
             if rawhit.E < eventpars.bgo_low
                 continue
             end
-            push!(hits, Hit(UInt8(loc), rawhit.E, t, 0.0, zero(Int8)))
+            push!(hits, Hit(UInt8(loc), rawhit.E, t, zero(Int8)))
         elseif type_table[loc] == NEDA
             if E < eventpars.neda_low
                 continue
             end
             pid = (Float64(rawhit.qshort) + randn()) / E
-            tof = t - t_last_neda_g
             if E > cal_table[2, loc] && pidpars.n_low <= pid < pidpars.n_high
-                push!(hits, Hit(UInt8(loc), E, t_last_neda_g, 
-                            tof, round(Int8, -pid * 100)))
+                push!(hits, Hit(UInt8(loc), E, t, round(Int8, -pid * 100)))
             elseif (E > cal_table[1, loc] 
                     && pidpars.g_low <= pid < pidpars.g_high)
-                t_last_neda_g = t
-                push!(hits, Hit(UInt8(loc), E, t_last_neda_g, 
-                            tof, round(Int8, pid * 100)))
+                push!(hits, Hit(UInt8(loc), E, t, round(Int8, pid * 100)))
             end
         elseif type_table[loc] == DIAMANT
             if E < eventpars.dia_low
@@ -170,9 +166,9 @@ function event_builder!(chunk, last_event, eventpars, specpars,
                 - cal_table[1, loc] / E^2 
                 - cal_table[2, loc] + 0.5)
             if pidpars.a_low < pid <= pidpars.a_high
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, round(Int8, -pid * 100)))
+                push!(hits, Hit(UInt8(loc), E, t, round(Int8, -pid * 100)))
             elseif 0 <= pid <= 1.27
-                push!(hits, Hit(UInt8(loc), E, t, 0.0, round(Int8, pid * 100)))
+                push!(hits, Hit(UInt8(loc), E, t, round(Int8, pid * 100)))
             end
         end
     end
@@ -182,8 +178,14 @@ function event_builder!(chunk, last_event, eventpars, specpars,
     event = [1]
     for i in 2:n_hits
         closeevent = false
-        if type_table[hits[i].loc] == NEDA 
+        if type_table[hits[i].loc] == NEDA && hits[i].pid > 0
             if hits[i].t - hits[event[1]].t < eventpars.neda_g_dt
+                push!(event, i)
+            else
+                closeevent = true
+            end
+        elseif type_table[hits[i].loc] == NEDA hits[i].pid < 0
+            if hits[i].t - hits[event[1]].t < eventpars.neda_n_dt
                 push!(event, i)
             else
                 closeevent = true
@@ -266,11 +268,12 @@ function update_spectra!(event, hits, edffile::IO, pidpars,
                 Eedf = round(UInt16, hits[event[j]].E * 10)
             end
             tedf = zero(UInt16)
-            if hits[event[j]].t > 655.35
+            if hits[event[j]].t - hits[event[1]].t > 655.35
                 tedf = typemax(UInt16)
             else
                 # 10 ps unit 10.15 ns -> 1015, max is 655.35 ns
-                tedf = round(UInt16, hits[event[j]].t * 100)
+                tedf = round(UInt16, 
+                             (hits[event[j]].t - hits[event[1]].t) * 100)
             end
             write(edffile, EDFHit(hits[event[j]].loc, hits[event[j]].pid,
                                   Eedf, tedf))

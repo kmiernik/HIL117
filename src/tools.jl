@@ -369,10 +369,11 @@ function modify_config_bulk()
 	filter!(x->startswith(basename(x), "config_"), files)
 	for file in files
 	    config = TOML.parsefile(file)
-	    config["spectra"]["Emax"] = 5120.0
-	    config["spectra"]["E2max"] = 3072.0
-	    config["spectra"]["dE3"] = 2.0
-	    config["spectra"]["E3max"] = 3072.0
+	    #config["spectra"]["Emax"] = 5120.0
+	    #config["spectra"]["E2max"] = 3072.0
+	    #config["spectra"]["dE3"] = 2.0
+	    #config["spectra"]["E3max"] = 3072.0
+        config["event"]["neda_n_dt"] = 20.0
 
 	    #config["calibration"] = Dict{String, Any}()
 	    #config["calibration"]["E1"] = 511.0

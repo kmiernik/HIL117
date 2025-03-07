@@ -10,6 +10,68 @@
 function distance(config, valid_table, last_label; def_value=3.0)
     distance_table = ones(Float64, last_label+1, last_label+1) .* def_value
     distance_table[last_label+1, last_label+1] = 0.0
+
+    neda_xyz = [ 0    0       657    
+                146.8   0       657    
+                73.4    -127.13 657    
+                -73.4   -127.13 657    
+                -146.8  0       657    
+                -73.4   127.13  657    
+                73.4    127.13  657    
+                206.45  -244.9  416.82   
+                233.88  -108.54 461.2    
+                327.66  -176.67 372.44   
+                -30.95  -255.97 461.2    
+                -66.77  -366.22 372.44   
+                -169.11 -272.03 416.82   
+                -275.29 66.83   444.13   
+                -290.22 -77.95  432.66   
+                -382.35 10.74   362.22   
+                -109.91 233.02  459.23   
+                -145.74 343.27  370.47   
+                -7.57   327.22  414.85   
+                175.23  189.27  461.2    
+                269.01  257.41  372.44   
+                296.44  121.05  416.82   
+                438.34  -47.33  286.36   
+                451.78  95.49   259.24   
+                500.18  -2.13   162.07   
+                90.7    -431.25 286.7    
+                230.7   -399.9  259.57   
+                152.8   -476.1  162.41   
+                -309.04 -342.98 259.57   
+                -405.58 -292.45 162.41   
+                -382.11 -219.53 286.7    
+                -326.75 295.74  286.68   
+                -421.57 188.1   259.56   
+                -403.35 295.53  162.39   
+                180.47  402.26  286.36   
+                48.79   459.18  259.24   
+                156.6   475.04  162.07   
+                430.9   -250.85 175      
+                452.98  -266.63 31.54    
+                367.78  -361.15 103.12   
+                -105.42 -487.33 175      
+                -113.6  -513.2  31.54    
+                -229.82 -461.38 103.12   
+                -498.03 32.19   165.12   
+                -511.41 -94.35  93.54    
+                -525.16 31.98   21.66    
+                -196.77 460.91  158.62   
+                -205.35 486.65  15.17    
+                -80.87  513.04  86.75    
+                377.72  329.27  158.82   
+                399.55  345.38  15.36    
+                463.11  235.15  86.94]
+    neda_dist = zeros(size(neda_xyz)[1], size(neda_xyz)[1])
+    for i in 1:size(neda_xyz)[1]
+        for j in 1:size(neda_xyz)[1]
+            neda_dist[i, j] = (sqrt((neda_xyz[i, 1] - neda_xyz[j, 1])^2 
+                                + (neda_xyz[i, 2] - neda_xyz[j, 2])^2 
+                                + (neda_xyz[i, 3] - neda_xyz[j, 3])^2) / 1000.0)
+        end
+    end
+
     for i in 1:last_label
         if !valid_table[i]
             continue
@@ -22,8 +84,8 @@ function distance(config, valid_table, last_label; def_value=3.0)
                     distance_table[i, j] = 1.0
                     distance_table[j, i] = 1.0
                 elseif config["label"]["$i"]["type"] == "NEDA" 
-                    distance_table[i, j] = 1.0
-                    distance_table[j, i] = 1.0
+                    distance_table[i, j] = sqrt(sum(neda_xyz[i-32, :].^2))/1000.0
+                    distance_table[j, i] = distance_table[i, j]
                 elseif config["label"]["$i"]["type"] == "DIAMANT" 
                     distance_table[i, j] = 0.0
                     distance_table[j, i] = 0.0
@@ -42,6 +104,10 @@ function distance(config, valid_table, last_label; def_value=3.0)
                     && config["label"]["$j"]["type"] == "DIAMANT")
                 distance_table[i, j] = 0.0
                 distance_table[j, i] = 0.0
+            elseif (config["label"]["$i"]["type"] == "NEDA"
+                    && config["label"]["$j"]["type"] == "NEDA")
+                distance_table[i, j] = neda_dist[i-32, j-32]
+                distance_table[j, i] = neda_dist[j-32, i-32]
             end
         end
     end
@@ -573,7 +639,7 @@ end
 
 """
     scan_all(dirname, configfile; use_configs=false, n_prescan=2,
-                                      skipruns=Int64[])
+        skipruns=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 26, 27, 33, 50, 72, 83, 85, 161, 162, 190, 194, 197, 198, 199, 200, 201, 202, 203, 300, 301])
 
     dirname - base directory with data (in subdirectories, per each run)
     configfile - base config file, see below

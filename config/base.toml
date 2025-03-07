@@ -27,7 +27,7 @@ comment = ""
 	ge_dt = 128.0
 	bgo_dt = 54.0
 	neda_g_dt = 10.0
-	neda_n_dt = 10.0
+	neda_n_dt = 20.0
 	dia_dt = 128.0
 	t_delay = 20.0
 

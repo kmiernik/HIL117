@@ -93,18 +93,17 @@ struct Hit
     loc::UInt8
     E::Float64
     t::Float64
-    tof::Float64
     pid::Int8
 end
 
 
 function Hit()
-    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(Int8))
+    return Hit(zero(UInt8), 0.0, 0.0, zero(Int8))
 end
 
 
 function Base.zero(::Type{Hit})
-    return Hit(zero(UInt8), 0.0, 0.0, 0.0, zero(Int8))
+    return Hit(zero(UInt8), 0.0, 0.0, zero(Int8))
 end
 
 
