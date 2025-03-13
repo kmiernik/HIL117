@@ -450,3 +450,66 @@ function sum_spectra(data_dir, sumfilename; prefix="",
 end
 
 
+function run_time(data_dir, configfile)
+    config = TOML.parsefile(configfile)
+
+    files_caen = readdir(data_dir, join=true)
+    filter!(x->endswith(x, ".caendat"), files_caen)
+    if length(files_caen) == 0
+        return 1
+    end
+
+    run_number = parse(Int64, split(basename(files_caen[1]), 
+                                    ['/', '_', '.'])[end-2])
+
+    cfin = open(files_caen[1], "r")
+    csize = filesize(files_caen[1])
+    if parse(Int64, split(files_caen[1], ['/', '_', '.'])[end-1]) == 0
+        header = zeros(UInt32, 12)
+        read!(cfin, header)
+        agava_ts = header[4] % UInt64
+        agava_ts = agava_ts << 32 + header[5] % UInt64
+    else
+        @warn "Could not read agava time stamp"
+        return 1
+    end
+    hits = read_aggregate(cfin, config)
+    t_start = typemax(Float64)
+    for hit in hits
+        if hit.ts < t_start
+            t_start = hit.ts
+        end
+    end
+    close(cfin)
+
+    t_end = 0
+    cfin = open(files_caen[end], "r")
+    if length(files_caen) == 1
+        header = zeros(UInt32, 12)
+        read!(cfin, header)
+    end
+
+    prog = Progress(filesize(files_caen[end]); dt=1.0, desc="", 
+                    barlen=30, color=:green)
+    i_hit = 0
+    while !eof(cfin) 
+        hits = read_aggregate(cfin, config)
+
+        for hit in hits
+            i_hit += 1
+            if hit.ts > t_end
+                t_end = hit.ts
+            end
+            if i_hit % 1_000_000 == 0
+                update!(prog, position(cfin))
+            end
+        end
+    end
+    update!(prog, filesize(files_caen[end]))
+
+    @printf("\u25CF %d run time  %.3f s\n", run_number, 
+            round((t_end-t_start) * 4 / 1e9, digits=3))
+
+    return (t_end - t_start) * 4 / 1e9
+
+end
